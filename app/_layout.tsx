@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { PaperProvider } from 'react-native-paper';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -6,8 +7,10 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   return (
-    <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-    </Stack>
+    <PaperProvider>
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack>
+    </PaperProvider>
   );
 }
