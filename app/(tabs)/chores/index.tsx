@@ -62,3 +62,66 @@ export default function ChoreScreen() {
   );
 }
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#E0E0E0',
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    backgroundColor: '#FFFFFF',
+  },
+  dateText: {
+    fontSize: 18,
+    fontWeight: '500',
+  },
+  scrollView: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  card: {
+    marginBottom: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    elevation: 2,
+  },
+  choreName: {
+    fontSize: 18,
+    fontWeight: '500',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 16,
+    gap: 16,
+  },
+  addButton: {
+    flex: 1,
+    backgroundColor: '#4DD0C1',
+    borderRadius: 24,
+    paddingVertical: 8,
+  },
+  editButton: {
+    flex: 1,
+    backgroundColor: '#FF9F6E',
+    borderRadius: 24,
+    paddingVertical: 8,
+  },
+  buttonLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000000',
+  },
+});
