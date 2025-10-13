@@ -3,7 +3,11 @@ import React from 'react';
 
 export default function TabLayout() {
   return (
-    <Tabs screenOptions={{}}>
+    <Tabs 
+      screenOptions={{
+        headerShown: false,  
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
