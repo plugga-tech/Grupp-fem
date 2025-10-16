@@ -3,9 +3,9 @@ import React from 'react';
 
 export default function TabLayout() {
   return (
-    <Tabs 
+    <Tabs
       screenOptions={{
-        headerShown: false,  
+        headerShown: false,
       }}
     >
       <Tabs.Screen
@@ -15,9 +15,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="home"
+        name="stats/index"
         options={{
-          title: 'Home',
+          title: 'Stats',
         }}
       />
       <Tabs.Screen
@@ -27,15 +27,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="household"
+        name="household/index"
         options={{
-          title: 'Households?',
-        }}
-      />
-      <Tabs.Screen
-        name="stats"
-        options={{
-          title: 'Stats',
+          title: 'Households',
         }}
       />
     </Tabs>
