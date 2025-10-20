@@ -27,7 +27,11 @@ export const storage = getStorage(app);
 
 // Analytics (only for web)
 let analytics;
-if (typeof window !== 'undefined') {
-  analytics = getAnalytics(app);
+try {
+  if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    analytics = getAnalytics(app);
+  }
+} catch (error) {
+  console.log('Analytics not available:', error);
 }
 export { analytics };
