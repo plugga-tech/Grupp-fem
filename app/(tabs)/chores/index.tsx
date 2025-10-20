@@ -1,6 +1,6 @@
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
-import { Button, Card, IconButton } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Card, IconButton } from 'react-native-paper';
 
 export default function ChoreScreen() {
   const router = useRouter();
@@ -16,12 +16,14 @@ export default function ChoreScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Hemma</Text>
-    
       <View style={styles.header}>
-        <IconButton icon="chevron-left" size={24} onPress={() => {}} />
-        <Text style={styles.dateText}>idag</Text>
-        <IconButton icon="chevron-right" size={24} onPress={() => {}} />
+        <Text style={styles.title}>Hemma</Text>
+        <IconButton 
+          icon="plus-circle-outline" 
+          size={36}
+          onPress={() => router.push('/chores/create')}
+          style={styles.plusButton}
+        />
       </View>
       
       <ScrollView style={styles.scrollView}>
@@ -37,27 +39,6 @@ export default function ChoreScreen() {
           </Card>
         ))}
       </ScrollView>
-
-      <View style={styles.buttonContainer}>
-        <Button 
-          mode="contained" 
-          icon="plus"
-          style={styles.addButton}
-          labelStyle={styles.buttonLabel}
-          onPress={() => router.push('/chores/create')}
-        >
-          Lägg till
-        </Button>
-        <Button 
-          mode="contained"
-          icon="pencil"
-          style={styles.editButton}
-          labelStyle={styles.buttonLabel}
-          onPress={() => router.push('/chores/edit/1')}
-        >
-          Ändra
-        </Button>
-      </View>
     </View>
   );
 }
@@ -67,24 +48,24 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#E0E0E0',
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
-  },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 8,
+    paddingVertical: 24,
+    paddingHorizontal: 16,
     backgroundColor: '#FFFFFF',
+    position: 'relative',
   },
-  dateText: {
-    fontSize: 18,
-    fontWeight: '500',
+  title: {
+    fontSize: 36,
+    fontWeight: 'bold',
+  },
+  plusButton: {
+    position: 'absolute',
+    right: 19,
+    top:30,
+    margin: 0,
   },
   scrollView: {
     flex: 1,
@@ -100,28 +81,5 @@ const styles = StyleSheet.create({
   choreName: {
     fontSize: 18,
     fontWeight: '500',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: 16,
-    gap: 16,
-  },
-  addButton: {
-    flex: 1,
-    backgroundColor: '#4DD0C1',
-    borderRadius: 24,
-    paddingVertical: 8,
-  },
-  editButton: {
-    flex: 1,
-    backgroundColor: '#FF9F6E',
-    borderRadius: 24,
-    paddingVertical: 8,
-  },
-  buttonLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000000',
   },
 });
