@@ -1,12 +1,14 @@
-import { Link } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
-import { Appbar, Avatar, Badge, Button, Card, List } from 'react-native-paper';
+import { Appbar, Badge, Button, Card, List, IconButton } from 'react-native-paper';
 
 export default function HouseholdScreen() {
   const households = [
-    { id: '1', name: 'Hushåll 1' },
-    { id: '2', name: 'Hushåll 2' },
+    { id: '1', name: 'Hushåll 1', code: '321CBA' },
+    { id: '2', name: 'Hushåll 2', code: 'ABC123' },
   ];
+
+  const router = useRouter();
 
   return (
     <View style={styles.container}>
@@ -27,26 +29,35 @@ export default function HouseholdScreen() {
         data={households}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <Link href={'/'} asChild>
-            <Card style={styles.card} mode="elevated">
-              <List.Item
-                title={item.name}
-                left={() => (
-                  <Avatar.Icon size={28} icon="information-outline" style={{ marginLeft: 10 }} />
-                )}
-                right={() => (
-                  <View style={styles.rightBadges}>
-                    <Badge size={24} style={{ alignSelf: 'center', backgroundColor: 'green' }}>
-                      🐸
-                    </Badge>
-                    <Badge size={24} style={{ alignSelf: 'center', backgroundColor: 'grey' }}>
-                      3
-                    </Badge>
-                  </View>
-                )}
-              />
-            </Card>
-          </Link>
+          <Card style={styles.card} mode="elevated">
+            <List.Item
+              title={item.name}
+              left={() => (
+                <IconButton
+                  icon="information-outline"
+                  size={24}
+                  style={{ marginLeft: 10 }}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/household/[id]',
+                      params: { id: item.id, name: item.name, code: item.code },
+                    })
+                  }
+                  accessibilityLabel="Visa hushållsinformation"
+                />
+              )}
+              right={() => (
+                <View style={styles.rightBadges}>
+                  <Badge size={24} style={{ alignSelf: 'center', backgroundColor: 'green' }}>
+                    🐸
+                  </Badge>
+                  <Badge size={24} style={{ alignSelf: 'center', backgroundColor: 'grey' }}>
+                    3
+                  </Badge>
+                </View>
+              )}
+            />
+          </Card>
         )}
       />
       <View style={styles.bottomBar}>
