@@ -1,21 +1,13 @@
 import { useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Card, IconButton } from 'react-native-paper';
+import { StyleSheet, Text, View } from 'react-native';
+import { IconButton } from 'react-native-paper';
 
 export default function ChoreScreen() {
   const router = useRouter();
 
-  const chores = [
-    { id: 1, name: 'Laga mat' },
-    { id: 2, name: 'Damma' },
-    { id: 3, name: 'Diska' },
-    { id: 4, name: 'Ta hand om My' },
-    { id: 5, name: 'Torka golvet' },
-    { id: 6, name: 'Vattna blommor' },
-  ];
-
   return (
     <View style={styles.container}>
+      
       <View style={styles.header}>
         <Text style={styles.title}>Hemma</Text>
         <IconButton 
@@ -23,22 +15,20 @@ export default function ChoreScreen() {
           size={36}
           onPress={() => router.push('/chores/create')}
           style={styles.plusButton}
+          iconColor="#000000"
         />
       </View>
-      
-      <ScrollView style={styles.scrollView}>
-        {chores.map((chore) => (
-          <Card 
-            key={chore.id} 
-            style={styles.card}
-            onPress={() => router.push(`/chores/details/${chore.id}`)}
-          >
-            <Card.Content>
-              <Text style={styles.choreName}>{chore.name}</Text>
-            </Card.Content>
-          </Card>
-        ))}
-      </ScrollView>
+
+      {/* Tom lista? har lagt till en Placeholder/skeleton */}
+      <View style={styles.emptyContainer}>
+        <View style={styles.iconPlaceholder}>
+          <Text style={styles.iconText}>📋</Text>
+        </View>
+        <Text style={styles.emptyTitle}>Inga sysslor än</Text>
+        <Text style={styles.emptySubtitle}>
+          Tryck på + för att lägga till din första syssla
+        </Text>
+      </View>
     </View>
   );
 }
@@ -46,7 +36,7 @@ export default function ChoreScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: '#E8E8E8',
   },
   header: {
     flexDirection: 'row',
@@ -56,30 +46,52 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     backgroundColor: '#FFFFFF',
     position: 'relative',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
   },
   title: {
     fontSize: 36,
     fontWeight: 'bold',
+    color: '#000000',
   },
   plusButton: {
     position: 'absolute',
     right: 19,
-    top:30,
+    top: 30,
     margin: 0,
   },
-  scrollView: {
+  emptyContainer: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
   },
-  card: {
-    marginBottom: 12,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    elevation: 2,
+  iconPlaceholder: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+    borderWidth: 2,
+    borderColor: '#D0D0D0',
+    borderStyle: 'dashed',
   },
-  choreName: {
-    fontSize: 18,
-    fontWeight: '500',
+  iconText: {
+    fontSize: 48,
+  },
+  emptyTitle: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#404040',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: 16,
+    color: '#808080',
+    textAlign: 'center',
+    lineHeight: 22,
   },
 });
