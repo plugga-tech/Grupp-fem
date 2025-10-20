@@ -1,8 +1,7 @@
-import { Stack } from 'expo-router';
-import { PaperProvider } from 'react-native-paper';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';
-import { useRouter, useSegments } from 'expo-router';
+import { PaperProvider } from 'react-native-paper';
 
 function RootLayoutNav() {
   const { user, loading } = useAuth();

@@ -4,37 +4,45 @@ import React, { useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
 
-export default function SignInScreen() {
+export default function RegisterScreen() {
+    const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const { login } = useAuth();
+    const { register } = useAuth();
     const router = useRouter();
 
-    const handleSignIn = async () => {
-        if (!email || !password) {
-            Alert.alert('Error', 'Please fill in all fields');
+    const handleRegister = async () => {
+        if (!fullName || !email || !password || !confirmPassword) {
+            Alert.alert('Fel', 'Vänligen fyll i alla fält');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            Alert.alert('Fel', 'Lösenorden matchar inte');
+            return;
+        }
+
+        if (password.length < 6) {
+            Alert.alert('Fel', 'Lösenordet måste vara minst 6 tecken');
             return;
         }
 
         setLoading(true);
         try {
-            await login(email, password);
+            await register(email, password);
             router.replace('/(tabs)');
         } catch (error: any) {
-            Alert.alert('Sign In Failed', error.message);
+            Alert.alert('Registrering misslyckades', error.message);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleSignUp = () => {
-        router.push('./register');
-    };
-
-    const handleForgotPassword = () => {
-        Alert.alert('Info', 'Forgot password feature coming soon');
+    const handleSignIn = () => {
+        router.back();
     };
 
     return (
@@ -52,8 +60,19 @@ export default function SignInScreen() {
             {/* Title */}
             <Text style={styles.title}>Hushållet</Text>
 
-            {/* Login Form */}
+            {/* Registration Form */}
             <View style={styles.formContainer}>
+                <TextInput
+                    label="Fullständigt namn"
+                    value={fullName}
+                    onChangeText={setFullName}
+                    mode="outlined"
+                    autoCapitalize="words"
+                    style={styles.input}
+                    outlineStyle={styles.inputOutline}
+                    textColor="#000000"
+                />
+
                 <TextInput
                     label="E-postadress"
                     value={email}
@@ -77,34 +96,43 @@ export default function SignInScreen() {
                     textColor="#000000"
                 />
 
-                <Button
-                    mode="contained"
-                    onPress={handleSignIn}
-                    loading={loading}
-                    disabled={loading}
-                    style={styles.loginButton}
-                    labelStyle={styles.loginButtonText}
-                >
-                    Logga in
-                </Button>
+                <TextInput
+                    label="Bekräfta lösenord"
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    mode="outlined"
+                    secureTextEntry
+                    style={styles.input}
+                    outlineStyle={styles.inputOutline}
+                    textColor="#000000"
+                />
 
                 <Button
-                    mode="text"
-                    onPress={handleSignUp}
-                    style={styles.linkButton}
-                    labelStyle={styles.linkText}
+                    mode="outlined"
+                    onPress={handleRegister}
+                    loading={loading}
+                    disabled={loading}
+                    style={styles.createButton}
+                    labelStyle={styles.createButtonText}
                 >
                     Skapa konto
                 </Button>
 
-                <Button
-                    mode="text"
-                    onPress={handleForgotPassword}
-                    style={styles.linkButton}
-                    labelStyle={styles.linkText}
-                >
-                    Glömt lösenord?
-                </Button>
+                <View style={styles.loginSection}>
+                    <Text style={styles.loginText}>Har du redan ett konto?</Text>
+                    <Button
+                        mode="text"
+                        onPress={handleSignIn}
+                        style={styles.loginButton}
+                        labelStyle={styles.loginLinkText}
+                    >
+                        Logga in
+                    </Button>
+                </View>
+
+                <Text style={styles.termsText}>
+                    Genom att skapa ett konto godkänner du våra villkor och integritetspolicy.
+                </Text>
             </View>
         </View>
     );
@@ -151,22 +179,43 @@ const styles = StyleSheet.create({
         borderColor: '#E9ECEF',
         borderWidth: 1,
     },
-    loginButton: {
+    createButton: {
         marginTop: 16,
         paddingVertical: 8,
-        backgroundColor: '#20B2AA',
+        backgroundColor: '#FFFFFF',
+        borderColor: '#E9ECEF',
+        borderWidth: 1,
         borderRadius: 24,
     },
-    loginButtonText: {
+    createButtonText: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#FFFFFF',
+        color: '#000000',
     },
-    linkButton: {
-        marginTop: 8,
+    loginSection: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 24,
+        gap: 4,
     },
-    linkText: {
+    loginText: {
         fontSize: 14,
         color: '#6C757D',
+    },
+    loginButton: {
+        minWidth: 0,
+    },
+    loginLinkText: {
+        fontSize: 14,
+        color: '#007AFF',
+        textDecorationLine: 'underline',
+    },
+    termsText: {
+        fontSize: 12,
+        color: '#9CA3AF',
+        textAlign: 'center',
+        marginTop: 24,
+        lineHeight: 16,
     },
 });
