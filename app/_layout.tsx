@@ -1,7 +1,10 @@
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { PaperProvider } from 'react-native-paper';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   const { user, loading } = useAuth();
@@ -38,9 +41,11 @@ export const unstable_settings = {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <PaperProvider>
-        <RootLayoutNav />
-      </PaperProvider>
+      <QueryClientProvider client={queryClient}>
+        <PaperProvider>
+          <RootLayoutNav />
+        </PaperProvider>
+      </QueryClientProvider>
     </AuthProvider>
   );
 }

@@ -1,14 +1,29 @@
+import { getHouseholds } from '@/api/household';
 import { useRouter } from 'expo-router';
+import { getAuth } from 'firebase/auth';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { Appbar, Badge, Button, Card, List, IconButton } from 'react-native-paper';
+import { useQuery } from '@tanstack/react-query';
 
 export default function HouseholdScreen() {
-  const households = [
-    { id: '1', name: 'Hushåll 1', code: '321CBA' },
-    { id: '2', name: 'Hushåll 2', code: 'ABC123' },
-  ];
-
   const router = useRouter();
+  const auth = getAuth();
+  const userId = auth.currentUser?.uid ?? null;
+
+  type Household = {
+    id: string;
+    name?: string;
+    code?: string;
+  };
+
+  const { data: household = [], error } = useQuery<Household[]>({
+    queryKey: ['household', userId],
+    enabled: !!userId,
+    queryFn: () => getHouseholds(userId!),
+  });
+
+  if (error) return <Text>Kunde inte hämta hushåll.</Text>;
+  if (!household.length) return <Text>Inga hushåll ännu.</Text>;
 
   return (
     <View style={styles.container}>
@@ -26,7 +41,7 @@ export default function HouseholdScreen() {
 
       <FlatList
         contentContainerStyle={styles.listContainer}
-        data={households}
+        data={household}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <Card style={styles.card} mode="elevated">
