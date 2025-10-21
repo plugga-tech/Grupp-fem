@@ -1,5 +1,5 @@
+import { addDoc, collection, deleteDoc, doc, getDocs, query, Timestamp, updateDoc, where } from 'firebase/firestore';
 import { db } from '../firebase-config';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, Timestamp } from 'firebase/firestore';
 
 export interface Chore {
   id: string;
@@ -29,6 +29,15 @@ export interface ChoreWithStatus extends Chore {
 
 export type ChoreCreate = Omit<Chore, 'id' | 'created_at' | 'updated_at'>;
 export type ChoreUpdate = Partial<ChoreCreate>;
+
+// Query Keys för React Query cache management
+export const choreKeys = {
+  all: ['chores'] as const,
+  lists: () => [...choreKeys.all, 'list'] as const,
+  list: (householdId: string) => [...choreKeys.lists(), householdId] as const,
+  details: () => [...choreKeys.all, 'detail'] as const,
+  detail: (id: string) => [...choreKeys.details(), id] as const,
+};
 
 export async function getChores(householdId: string): Promise<Chore[]> {
   try {

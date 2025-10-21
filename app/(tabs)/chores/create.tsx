@@ -1,10 +1,10 @@
-import { View, Text, TextInput, StyleSheet, Alert, ScrollView, TouchableOpacity, Modal } from 'react-native';
-import { IconButton } from 'react-native-paper';
-import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createChore } from '../../../api/chores';
-import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
+import { useState } from 'react';
+import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { IconButton } from 'react-native-paper';
+import { choreKeys, createChore } from '../../../api/chores';
 import { currentHouseholdAtom } from '../../../atoms';
 
 export default function CreateChoreScreen() {
@@ -22,8 +22,11 @@ export default function CreateChoreScreen() {
 
   const mutation = useMutation({
     mutationFn: createChore,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['chores'] });
+    onSuccess: (data, variables) => {
+
+      queryClient.invalidateQueries({
+        queryKey: choreKeys.list(variables.household_id)
+      });
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
@@ -63,8 +66,8 @@ export default function CreateChoreScreen() {
     <View style={styles.container}>
 
       <View style={styles.header}>
-        <IconButton 
-          icon="arrow-left" 
+        <IconButton
+          icon="arrow-left"
           size={24}
           onPress={() => router.back()}
           style={{ margin: 0 }}
@@ -74,7 +77,7 @@ export default function CreateChoreScreen() {
       </View>
 
       <ScrollView style={styles.form}>
-      
+
         <TextInput
           style={styles.input}
           placeholder="Titel"
@@ -93,7 +96,7 @@ export default function CreateChoreScreen() {
           placeholderTextColor="#C0C0C0"
         />
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.card}
           onPress={() => setShowFrequencyPicker(true)}
         >
@@ -107,7 +110,7 @@ export default function CreateChoreScreen() {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.card}
           onPress={() => setShowWeightPicker(true)}
         >
@@ -128,15 +131,15 @@ export default function CreateChoreScreen() {
         animationType="fade"
         onRequestClose={() => setShowFrequencyPicker(false)}
       >
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
           onPress={() => setShowFrequencyPicker(false)}
         >
           <View style={styles.pickerContainer}>
             <Text style={styles.pickerTitle}>Återkommer väljare</Text>
-            <ScrollView 
-              horizontal 
+            <ScrollView
+              horizontal
               showsHorizontalScrollIndicator={false}
               style={styles.pickerScroll}
             >
@@ -172,7 +175,7 @@ export default function CreateChoreScreen() {
         animationType="fade"
         onRequestClose={() => setShowWeightPicker(false)}
       >
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
           onPress={() => setShowWeightPicker(false)}

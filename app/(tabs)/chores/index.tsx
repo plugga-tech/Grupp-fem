@@ -1,9 +1,9 @@
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
-import { Card, IconButton } from 'react-native-paper';
-import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { getChoresWithStatus } from '../../../api/chores';
+import { useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Card, IconButton } from 'react-native-paper';
+import { choreKeys, getChoresWithStatus } from '../../../api/chores';
 import { currentHouseholdAtom, currentUserAtom } from '../../../atoms';
 
 export default function ChoreScreen() {
@@ -12,7 +12,7 @@ export default function ChoreScreen() {
   const [currentUser] = useAtom(currentUserAtom);
 
   const { data: chores, isLoading, isError, refetch } = useQuery({
-    queryKey: ['chores', currentHousehold?.id],
+    queryKey: choreKeys.list(currentHousehold?.id || ''),
     queryFn: () => getChoresWithStatus(currentHousehold?.id || ''),
     enabled: !!currentHousehold?.id,
   });
@@ -50,8 +50,8 @@ export default function ChoreScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Hemma</Text>
         {currentUser?.is_admin && (
-          <IconButton 
-            icon="plus-circle-outline" 
+          <IconButton
+            icon="plus-circle-outline"
             size={36}
             onPress={() => router.push('/chores/create')}
             style={styles.plusButton}
@@ -73,14 +73,14 @@ export default function ChoreScreen() {
       ) : (
         <ScrollView style={styles.scrollView}>
           {chores.map((chore) => (
-            <Card 
-              key={chore.id} 
+            <Card
+              key={chore.id}
               style={styles.card}
               onPress={() => router.push(`/chores/details/${chore.id}`)}
             >
               <Card.Content style={styles.cardContent}>
                 <Text style={styles.choreName}>{chore.name}</Text>
-                
+
                 <View style={[
                   styles.dayBadge,
                   chore.is_overdue ? styles.dayBadgeOverdue : styles.dayBadgeNormal
