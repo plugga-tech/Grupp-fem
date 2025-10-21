@@ -1,63 +1,92 @@
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
-import { Button, Card, IconButton } from 'react-native-paper';
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { Card, IconButton } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
+import { getChores } from '../../../api/chores';
+import { useAtom } from 'jotai';
+import { currentHouseholdAtom, currentUserAtom } from '../../../atoms';
 
 export default function ChoreScreen() {
   const router = useRouter();
+  const [currentHousehold] = useAtom(currentHouseholdAtom);
+  const [currentUser] = useAtom(currentUserAtom);
 
-  const chores = [
-    { id: 1, name: 'Laga mat' },
-    { id: 2, name: 'Damma' },
-    { id: 3, name: 'Diska' },
-    { id: 4, name: 'Ta hand om My' },
-    { id: 5, name: 'Torka golvet' },
-    { id: 6, name: 'Vattna blommor' },
-  ];
+  const { data: chores, isLoading, isError, refetch } = useQuery({
+    queryKey: ['chores', currentHousehold?.id],
+    queryFn: () => getChores(currentHousehold?.id || ''),
+    enabled: !!currentHousehold?.id,
+  });
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Hemma</Text>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4A90E2" />
+          <Text style={styles.loadingText}>Laddar sysslor...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Hemma</Text>
+        </View>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Kunde inte ladda sysslor</Text>
+          <IconButton icon="refresh" onPress={() => refetch()} />
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Hemma</Text>
-    
+   
       <View style={styles.header}>
-        <IconButton icon="chevron-left" size={24} onPress={() => {}} />
-        <Text style={styles.dateText}>idag</Text>
-        <IconButton icon="chevron-right" size={24} onPress={() => {}} />
+        <Text style={styles.title}>Hemma</Text>
+        {currentUser?.is_admin && (
+          <IconButton 
+            icon="plus-circle-outline" 
+            size={36}
+            onPress={() => router.push('/chores/create')}
+            style={styles.plusButton}
+            iconColor="#000000"
+          />
+        )}
       </View>
-      
-      <ScrollView style={styles.scrollView}>
-        {chores.map((chore) => (
-          <Card 
-            key={chore.id} 
-            style={styles.card}
-            onPress={() => router.push(`/chores/details/${chore.id}`)}
-          >
-            <Card.Content>
-              <Text style={styles.choreName}>{chore.name}</Text>
-            </Card.Content>
-          </Card>
-        ))}
-      </ScrollView>
 
-      <View style={styles.buttonContainer}>
-        <Button 
-          mode="contained" 
-          icon="plus"
-          style={styles.addButton}
-          labelStyle={styles.buttonLabel}
-          onPress={() => router.push('/chores/create')}
-        >
-          Lägg till
-        </Button>
-        <Button 
-          mode="contained"
-          icon="pencil"
-          style={styles.editButton}
-          labelStyle={styles.buttonLabel}
-          onPress={() => router.push('/chores/edit/1')}
-        >
-          Ändra
-        </Button>
-      </View>
+     {/* Tom lista? har lagt till en Placeholder/skeleton */}
+      {!chores || chores.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <View style={styles.iconPlaceholder}>
+            <Text style={styles.iconText}>📋</Text>
+          </View>
+          <Text style={styles.emptyTitle}>Inga sysslor än</Text>
+          <Text style={styles.emptySubtitle}>
+            Tryck på + för att lägga till din första syssla
+          </Text>
+        </View>
+      ) : (
+        <ScrollView style={styles.scrollView}>
+          {chores.map((chore) => (
+            <Card 
+              key={chore.id} 
+              style={styles.card}
+              onPress={() => router.push(`/chores/details/${chore.id}`)}
+            >
+              <Card.Content>
+                <Text style={styles.choreName}>{chore.name}</Text>
+              </Card.Content>
+            </Card>
+          ))}
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -65,26 +94,33 @@ export default function ChoreScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: '#E8E8E8',
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 8,
+    paddingVertical: 24,
+    paddingHorizontal: 16,
     backgroundColor: '#FFFFFF',
+    position: 'relative',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
   },
-  dateText: {
-    fontSize: 18,
-    fontWeight: '500',
+  title: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#000000',
+  },
+  plusButton: {
+    position: 'absolute',
+    right: 16,
+    top: 20,
+    margin: 0,
   },
   scrollView: {
     flex: 1,
@@ -101,27 +137,58 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '500',
   },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: 16,
-    gap: 16,
-  },
-  addButton: {
+  emptyContainer: {
     flex: 1,
-    backgroundColor: '#4DD0C1',
-    borderRadius: 24,
-    paddingVertical: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
   },
-  editButton: {
-    flex: 1,
-    backgroundColor: '#FF9F6E',
-    borderRadius: 24,
-    paddingVertical: 8,
+  iconPlaceholder: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+    borderWidth: 2,
+    borderColor: '#D0D0D0',
+    borderStyle: 'dashed',
   },
-  buttonLabel: {
-    fontSize: 16,
+  iconText: {
+    fontSize: 48,
+  },
+  emptyTitle: {
+    fontSize: 24,
     fontWeight: '600',
-    color: '#000000',
+    color: '#404040',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: 16,
+    color: '#808080',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 18,
+    color: 'red',
+    marginBottom: 16,
   },
 });
