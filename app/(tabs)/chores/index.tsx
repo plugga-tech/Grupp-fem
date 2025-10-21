@@ -2,7 +2,7 @@ import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-nat
 import { Card, IconButton } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { getChores } from '../../../api/chores';
+import { getChoresWithStatus } from '../../../api/chores';
 import { useAtom } from 'jotai';
 import { currentHouseholdAtom, currentUserAtom } from '../../../atoms';
 
@@ -13,7 +13,7 @@ export default function ChoreScreen() {
 
   const { data: chores, isLoading, isError, refetch } = useQuery({
     queryKey: ['chores', currentHousehold?.id],
-    queryFn: () => getChores(currentHousehold?.id || ''),
+    queryFn: () => getChoresWithStatus(currentHousehold?.id || ''),
     enabled: !!currentHousehold?.id,
   });
 
@@ -47,7 +47,6 @@ export default function ChoreScreen() {
 
   return (
     <View style={styles.container}>
-   
       <View style={styles.header}>
         <Text style={styles.title}>Hemma</Text>
         {currentUser?.is_admin && (
@@ -61,7 +60,6 @@ export default function ChoreScreen() {
         )}
       </View>
 
-     {/* Tom lista? har lagt till en Placeholder/skeleton */}
       {!chores || chores.length === 0 ? (
         <View style={styles.emptyContainer}>
           <View style={styles.iconPlaceholder}>
@@ -80,8 +78,15 @@ export default function ChoreScreen() {
               style={styles.card}
               onPress={() => router.push(`/chores/details/${chore.id}`)}
             >
-              <Card.Content>
+              <Card.Content style={styles.cardContent}>
                 <Text style={styles.choreName}>{chore.name}</Text>
+                
+                <View style={[
+                  styles.dayBadge,
+                  chore.is_overdue ? styles.dayBadgeOverdue : styles.dayBadgeNormal
+                ]}>
+                  <Text style={styles.dayNumber}>{chore.days_since_last}</Text>
+                </View>
               </Card.Content>
             </Card>
           ))}
@@ -119,7 +124,7 @@ const styles = StyleSheet.create({
   plusButton: {
     position: 'absolute',
     right: 16,
-    top: 20,
+    top: 30,
     margin: 0,
   },
   scrollView: {
@@ -133,9 +138,37 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     elevation: 2,
   },
+  cardContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
   choreName: {
     fontSize: 18,
     fontWeight: '500',
+    color: '#000',
+    flex: 1,
+  },
+  dayBadge: {
+    minWidth: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 12,
+    paddingHorizontal: 10,
+  },
+  dayBadgeNormal: {
+    backgroundColor: '#6AC08B',
+  },
+  dayBadgeOverdue: {
+    backgroundColor: '#CD5D6F',
+  },
+  dayNumber: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   emptyContainer: {
     flex: 1,
