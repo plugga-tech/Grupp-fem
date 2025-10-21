@@ -165,4 +165,75 @@ export default function CreateChoreScreen() {
         </TouchableOpacity>
       </Modal>
 
-     
+      {/* Weight Picker Modal */}
+      <Modal
+        visible={showWeightPicker}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowWeightPicker(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowWeightPicker(false)}
+        >
+          <View style={styles.pickerContainer}>
+            <Text style={styles.pickerTitle}>Värde väljare</Text>
+            <View style={styles.weightPickerRow}>
+              {weightOptions.map((num) => (
+                <TouchableOpacity
+                  key={num}
+                  onPress={() => {
+                    setWeight(num);
+                    setShowWeightPicker(false);
+                  }}
+                  style={[
+                    styles.weightPickerItem,
+                    weight === num && styles.weightPickerItemActive
+                  ]}
+                >
+                  <Text style={[
+                    styles.pickerText,
+                    weight === num && styles.pickerTextActive
+                  ]}>
+                    {num}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {showSuccess && (
+        <View style={styles.successToast}>
+          <Text style={styles.successToastText}>✅ Sysslan har sparats</Text>
+        </View>
+      )}
+
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={styles.saveButton}
+          onPress={handleSave}
+          disabled={mutation.isPending}
+        >
+          <View style={styles.circleIcon}>
+            <Text style={styles.plusIcon}>+</Text>
+          </View>
+          <Text style={styles.saveButtonText}>Spara</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={() => router.back()}
+          disabled={mutation.isPending}
+        >
+          <View style={[styles.circleIcon, styles.circleIconDark]}>
+            <Text style={[styles.plusIcon, styles.plusIconDark]}>×</Text>
+          </View>
+          <Text style={styles.closeButtonText}>Stäng</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
