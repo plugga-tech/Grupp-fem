@@ -3,6 +3,7 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import React, { useEffect } from 'react';
 import { PaperProvider } from 'react-native-paper';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Provider as JotaiProvider } from 'jotai';
 
 const queryClient = new QueryClient();
 
@@ -40,12 +41,14 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClient}>
-        <PaperProvider>
-          <RootLayoutNav />
-        </PaperProvider>
-      </QueryClientProvider>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <JotaiProvider>
+        <AuthProvider>
+          <PaperProvider>
+            <RootLayoutNav />
+          </PaperProvider>
+        </AuthProvider>
+      </JotaiProvider>
+    </QueryClientProvider>
   );
 }
