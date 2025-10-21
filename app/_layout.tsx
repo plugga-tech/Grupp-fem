@@ -1,16 +1,18 @@
-import { Stack } from 'expo-router';
+import { Slot } from 'expo-router';
 import { PaperProvider } from 'react-native-paper';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Provider as JotaiProvider } from 'jotai';
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+const queryClient = new QueryClient();
 
 export default function RootLayout() {
   return (
-    <PaperProvider>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      </Stack>
-    </PaperProvider>
+    <QueryClientProvider client={queryClient}>
+      <JotaiProvider>
+        <PaperProvider>
+          <Slot />
+        </PaperProvider>
+      </JotaiProvider>
+    </QueryClientProvider>
   );
 }
