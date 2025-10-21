@@ -121,4 +121,48 @@ export default function CreateChoreScreen() {
         </TouchableOpacity>
       </ScrollView>
 
+      {/* Frequency Picker Modal */}
+      <Modal
+        visible={showFrequencyPicker}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowFrequencyPicker(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowFrequencyPicker(false)}
+        >
+          <View style={styles.pickerContainer}>
+            <Text style={styles.pickerTitle}>Återkommer väljare</Text>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              style={styles.pickerScroll}
+            >
+              {frequencyOptions.map((num) => (
+                <TouchableOpacity
+                  key={num}
+                  onPress={() => {
+                    setFrequency(num);
+                    setShowFrequencyPicker(false);
+                  }}
+                  style={[
+                    styles.pickerItem,
+                    frequency === num && styles.pickerItemActive
+                  ]}
+                >
+                  <Text style={[
+                    styles.pickerText,
+                    frequency === num && styles.pickerTextActive
+                  ]}>
+                    {num}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
      
