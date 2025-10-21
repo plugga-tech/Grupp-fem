@@ -1,4 +1,3 @@
-import { Slot } from 'expo-router';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';
@@ -8,15 +7,6 @@ import { Provider as JotaiProvider } from 'jotai';
 
 const queryClient = new QueryClient();
 
-export default function RootLayout() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <JotaiProvider>
-        <PaperProvider>
-          <Slot />
-        </PaperProvider>
-      </JotaiProvider>
-    </QueryClientProvider>
 function RootLayoutNav() {
   const { user, loading } = useAuth();
   const segments = useSegments();
@@ -51,10 +41,14 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <PaperProvider>
-        <RootLayoutNav />
-      </PaperProvider>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <JotaiProvider>
+        <AuthProvider>
+          <PaperProvider>
+            <RootLayoutNav />
+          </PaperProvider>
+        </AuthProvider>
+      </JotaiProvider>
+    </QueryClientProvider>
   );
 }
