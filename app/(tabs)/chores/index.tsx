@@ -61,7 +61,7 @@ export default function ChoreScreen() {
         )}
       </View>
 
-    
+     {/* Tom lista? har lagt till en Placeholder/skeleton */}
       {!chores || chores.length === 0 ? (
         <View style={styles.emptyContainer}>
           <View style={styles.iconPlaceholder}>
