@@ -304,5 +304,51 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
   },
- 
+  numberBadge: {
+    backgroundColor: '#CD5D6F',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  numberBadgeGray: {
+    backgroundColor: '#9E9E9E',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  numberBadgeText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    padding: 0,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+  },
+  saveButton: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: '#4A90E2',
+    paddingVertical: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeButton: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderLeftWidth: 1,
+    borderLeftColor: '#E0E0E0',
+  },
+  
 });
