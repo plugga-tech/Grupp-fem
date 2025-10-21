@@ -1,9 +1,9 @@
-import { getHouseholds } from '@/api/household';
+import { getHouseholds, householdKeys } from '@/api/household';
+import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { getAuth } from 'firebase/auth';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
-import { Appbar, Badge, Button, Card, List, IconButton } from 'react-native-paper';
-import { useQuery } from '@tanstack/react-query';
+import { Appbar, Badge, Button, Card, IconButton, List } from 'react-native-paper';
 
 export default function HouseholdScreen() {
   const router = useRouter();
@@ -17,7 +17,7 @@ export default function HouseholdScreen() {
   };
 
   const { data: household = [], error } = useQuery<Household[]>({
-    queryKey: ['household', userId],
+    queryKey: householdKeys.list(userId || ''),
     enabled: !!userId,
     queryFn: () => getHouseholds(userId!),
   });
@@ -29,7 +29,7 @@ export default function HouseholdScreen() {
     <View style={styles.container}>
       <Appbar.Header mode="center-aligned">
         <Appbar.Content title="Dina hushåll" />
-        <Appbar.Action icon="account" onPress={() => {}} />
+        <Appbar.Action icon="account" onPress={() => { }} />
       </Appbar.Header>
 
       <View style={styles.sectionHeader}>
@@ -76,10 +76,10 @@ export default function HouseholdScreen() {
         )}
       />
       <View style={styles.bottomBar}>
-        <Button mode="contained" icon="plus" style={styles.barBtn} onPress={() => {}}>
+        <Button mode="contained" icon="plus" style={styles.barBtn} onPress={() => { }}>
           Skapa
         </Button>
-        <Button mode="contained" icon="key-variant" style={styles.barBtn} onPress={() => {}}>
+        <Button mode="contained" icon="key-variant" style={styles.barBtn} onPress={() => { }}>
           Gå med
         </Button>
       </View>
