@@ -29,7 +29,7 @@ export default function HouseholdScreen() {
     <View style={styles.container}>
       <Appbar.Header mode="center-aligned">
         <Appbar.Content title="Dina hushåll" />
-        <Appbar.Action icon="account" onPress={() => { }} />
+        <Appbar.Action icon="account" onPress={() => {}} />
       </Appbar.Header>
 
       <View style={styles.sectionHeader}>
@@ -54,7 +54,7 @@ export default function HouseholdScreen() {
                   style={{ marginLeft: 10 }}
                   onPress={() =>
                     router.push({
-                      pathname: '/household/[id]',
+                      pathname: '/household/details/[id]',
                       params: { id: item.id, name: item.name, code: item.code },
                     })
                   }
@@ -76,10 +76,10 @@ export default function HouseholdScreen() {
         )}
       />
       <View style={styles.bottomBar}>
-        <Button mode="contained" icon="plus" style={styles.barBtn} onPress={() => { }}>
+        <Button mode="contained" icon="plus" style={styles.barBtn} onPress={() => {}}>
           Skapa
         </Button>
-        <Button mode="contained" icon="key-variant" style={styles.barBtn} onPress={() => { }}>
+        <Button mode="contained" icon="key-variant" style={styles.barBtn} onPress={() => {}}>
           Gå med
         </Button>
       </View>

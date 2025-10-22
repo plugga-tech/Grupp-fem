@@ -1,11 +1,6 @@
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { useReactQuerySetup } from '@/hooks/use-react-query-setup';
-import {
-  MutationCache,
-  QueryCache,
-  QueryClient,
-  QueryClientProvider
-} from '@tanstack/react-query';
+import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { Provider as JotaiProvider } from 'jotai';
 import React, { useEffect } from 'react';
@@ -48,7 +43,7 @@ function RootLayoutNav() {
       router.replace('/sign-in');
     } else if (user && !inAuthGroup) {
       // User is logged in but not in protected area
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/chores');
     }
   }, [user, loading, segments]);
 
