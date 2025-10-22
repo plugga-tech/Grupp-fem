@@ -1,14 +1,26 @@
-import { getHouseholds, householdKeys } from '@/api/household';
-import { useQuery } from '@tanstack/react-query';
+import { createHousehold, getHouseholds, householdKeys } from '@/api/household';
+import CreateHouseholdModal from '@/components/CreateHouseholdModal';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { getAuth } from 'firebase/auth';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { Appbar, Badge, Button, Card, IconButton, List } from 'react-native-paper';
+import React, { useState } from 'react';
 
 export default function HouseholdScreen() {
+  const queryClient = useQueryClient();
+  const createMutation = useMutation({
+    mutationFn: (name: string) => createHousehold({ name, ownerId: userId! }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: householdKeys.list(userId!) });
+    },
+  });
+
   const router = useRouter();
   const auth = getAuth();
   const userId = auth.currentUser?.uid ?? null;
+
+  const [createOpen, setCreateOpen] = useState(false);
 
   type Household = {
     id: string;
@@ -23,7 +35,6 @@ export default function HouseholdScreen() {
   });
 
   if (error) return <Text>Kunde inte hämta hushåll.</Text>;
-  if (!household.length) return <Text>Inga hushåll ännu.</Text>;
 
   return (
     <View style={styles.container}>
@@ -35,7 +46,7 @@ export default function HouseholdScreen() {
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Hushåll</Text>
         <Badge size={24} style={{ alignSelf: 'center', backgroundColor: 'grey' }}>
-          2
+          {household.length}
         </Badge>
       </View>
 
@@ -74,15 +85,35 @@ export default function HouseholdScreen() {
             />
           </Card>
         )}
+        ListEmptyComponent={<Text style={{ padding: 16 }}>Inga hushåll ännu.</Text>}
       />
       <View style={styles.bottomBar}>
-        <Button mode="contained" icon="plus" style={styles.barBtn} onPress={() => {}}>
+        <Button
+          mode="contained"
+          icon="plus"
+          style={styles.barBtn}
+          onPress={() => setCreateOpen(true)}
+        >
           Skapa
         </Button>
         <Button mode="contained" icon="key-variant" style={styles.barBtn} onPress={() => {}}>
           Gå med
         </Button>
       </View>
+      <CreateHouseholdModal
+        visible={createOpen}
+        onClose={() => {
+          setCreateOpen(false);
+          createMutation.reset();
+        }}
+        onSubmit={(name) => {
+          if (!userId) return;
+          createMutation.mutate(name);
+        }}
+        pending={createMutation.isPending}
+        error={createMutation.error ? (createMutation.error as Error).message : null}
+        result={createMutation.data ?? null}
+      />
     </View>
   );
 }
