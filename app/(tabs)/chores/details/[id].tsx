@@ -145,3 +145,24 @@ export default function ChoreDetailsScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* Success meddelande eller Markera knapp */}
+      {isCompletedToday ? (
+        <View style={styles.completedContainer}>
+          <Text style={styles.completedText}>✅ Sysslan är markerad som gjord!</Text>
+        </View>
+      ) : (
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.completeButton}
+            onPress={() => completeMutation.mutate()}
+            disabled={completeMutation.isPending}
+          >
+            <Text style={styles.completeButtonText}>
+              {completeMutation.isPending ? 'Markerar...' : 'Markera som gjord ✓'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+     
