@@ -321,5 +321,48 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#000',
   },
+  form: {
+    flex: 1,
+    padding: 16,
+  },
+  input: {
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 12,
+    fontSize: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  textArea: {
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  card: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  cardLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+  },
+  cardSubtitle: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 4,
+  },
+  frequencyContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
  
 });
