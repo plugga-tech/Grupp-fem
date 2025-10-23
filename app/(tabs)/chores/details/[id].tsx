@@ -108,4 +108,10 @@ export default function ChoreDetailsScreen() {
         )}
       </View>
 
-     
+      <ScrollView style={styles.content}>
+        {/* Namn */}
+        <View style={styles.card}>
+          <Text style={styles.choreName}>{chore.name}</Text>
+        </View>
+
+        
