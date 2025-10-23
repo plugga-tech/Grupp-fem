@@ -71,7 +71,10 @@ export default function ChoreScreen() {
           </Text>
         </View>
       ) : (
-        <ScrollView style={styles.scrollView}>
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollViewContent}
+        >
           {chores.map((chore) => (
             <Card
               key={chore.id}
@@ -131,6 +134,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 16,
+  },
+  scrollViewContent: {
+    paddingBottom: 65,
   },
   card: {
     marginBottom: 12,
