@@ -452,5 +452,57 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  pickerContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 20,
+    width: '90%',
+    maxWidth: 400,
+  },
+  pickerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  pickerScroll: {
+    maxHeight: 80,
+  },
+  pickerItem: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#E0E0E0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  pickerItemActive: {
+    backgroundColor: '#6AC08B',
+  },
+  pickerText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+  },
+  pickerTextActive: {
+    color: '#FFFFFF',
+  },
+  weightPickerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 10,
+  },
+  weightPickerItem: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#E0E0E0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  weightPickerItemActive: {
+    backgroundColor: '#9E9E9E',
+  },
  
 });
