@@ -165,4 +165,13 @@ export default function ChoreDetailsScreen() {
         </View>
       )}
 
-     
+      {/* Delete Toast */}
+      {showDeleteToast && (
+        <View style={styles.deleteToast}>
+          <Text style={styles.deleteToastText}>🗑️ Sysslan är borttagen!</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
