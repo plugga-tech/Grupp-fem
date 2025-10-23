@@ -134,3 +134,14 @@ export default function ChoreDetailsScreen() {
           </View>
         </View>
 
+        {/* Värde */}
+        <View style={styles.infoCard}>
+          <View>
+            <Text style={styles.infoLabel}>Värde:</Text>
+            <Text style={styles.infoSubtitle}>Hur energikrävande är sysslan?</Text>
+          </View>
+          <View style={styles.numberBadgeGray}>
+            <Text style={styles.numberBadgeText}>{chore.weight}</Text>
+          </View>
+        </View>
+      </ScrollView>
