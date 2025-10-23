@@ -1,6 +1,5 @@
 import { db } from '../firebase-config';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, Timestamp } from 'firebase/firestore';
-
 export interface Chore {
   id: string;
   household_id: string;
@@ -11,7 +10,6 @@ export interface Chore {
   created_at: Date;
   updated_at: Date;
 }
-
 export interface ChoreCompletion {
   id: string;
   chore_id: string;
@@ -19,7 +17,6 @@ export interface ChoreCompletion {
   done_by_user_id: string;
   done_at: Date;
 }
-
 export interface ChoreWithStatus extends Chore {
   days_since_last: number;
   is_overdue: boolean;
@@ -29,7 +26,6 @@ export interface ChoreWithStatus extends Chore {
 
 export type ChoreCreate = Omit<Chore, 'id' | 'created_at' | 'updated_at'>;
 export type ChoreUpdate = Partial<ChoreCreate>;
-
 export async function getChores(householdId: string): Promise<Chore[]> {
   try {
     const choresRef = collection(db, 'chores');
@@ -41,10 +37,10 @@ export async function getChores(householdId: string): Promise<Chore[]> {
       created_at: docSnap.data().created_at?.toDate(),
       updated_at: docSnap.data().updated_at?.toDate(),
     })) as Chore[];
-    
+   
     // Sortera efter created_at
     chores.sort((a, b) => a.created_at.getTime() - b.created_at.getTime());
-    
+   
     return chores;
   } catch (error) {
     console.error('Error in getChores:', error);
@@ -56,14 +52,14 @@ export async function getChoresWithStatus(householdId: string): Promise<ChoreWit
   try {
     const chores = await getChores(householdId);
     const completionsRef = collection(db, 'chore_completion');
-    
+   
     // Hämta ALLA completions för hushållet
     const q = query(
       completionsRef,
       where('household_id', '==', householdId)
     );
     const snapshot = await getDocs(q);
-    
+   
     // Gruppera completions per chore_id
     const completionsByChore: { [choreId: string]: any[] } = {};
     snapshot.docs.forEach((docSnap) => {
@@ -76,15 +72,15 @@ export async function getChoresWithStatus(householdId: string): Promise<ChoreWit
         done_at: data.done_at?.toDate(),
       });
     });
-    
+   
     // Beräkna status för varje syssla
     const choresWithStatus: ChoreWithStatus[] = chores.map((chore) => {
       const choreCompletions = completionsByChore[chore.id] || [];
-      
+     
       let lastCompletedAt: Date | undefined = undefined;
       let lastCompletedBy: string | undefined = undefined;
       let daysSinceLast: number;
-      
+     
       if (choreCompletions.length > 0) {
         // Sortera för att hitta senaste
         choreCompletions.sort((a, b) => {
@@ -92,7 +88,7 @@ export async function getChoresWithStatus(householdId: string): Promise<ChoreWit
           const dateB = b.done_at ? b.done_at.getTime() : 0;
           return dateB - dateA;
         });
-        
+       
         const lastCompletion = choreCompletions[0];
         if (lastCompletion?.done_at) {
           lastCompletedAt = lastCompletion.done_at;
@@ -108,7 +104,7 @@ export async function getChoresWithStatus(householdId: string): Promise<ChoreWit
       }
    
       const isOverdue = daysSinceLast > chore.frequency;
-      
+     
       return {
         ...chore,
         days_since_last: daysSinceLast,
@@ -117,7 +113,7 @@ export async function getChoresWithStatus(householdId: string): Promise<ChoreWit
         last_completed_by: lastCompletedBy,
       };
     });
-    
+   
     return choresWithStatus;
   } catch (error) {
     console.error('Error in getChoresWithStatus:', error);
@@ -146,6 +142,7 @@ export async function createChore(chore: ChoreCreate): Promise<Chore> {
   }
 }
 
+
 export async function updateChore(id: string, updates: ChoreUpdate): Promise<void> {
   try {
     const choreRef = doc(db, 'chores', id);
@@ -159,6 +156,7 @@ export async function updateChore(id: string, updates: ChoreUpdate): Promise<voi
   }
 }
 
+
 export async function deleteChore(id: string): Promise<void> {
   try {
     const choreRef = doc(db, 'chores', id);
@@ -166,5 +164,20 @@ export async function deleteChore(id: string): Promise<void> {
   } catch (error) {
     console.error('Error deleting chore:', error);
     throw new Error('Failed to delete chore', { cause: error });
+  }
+}
+
+export async function completeChore(choreId: string, householdId: string, userId: string): Promise<void> {
+  try {
+    const completionsRef = collection(db, 'chore_completion');
+    await addDoc(completionsRef, {
+      chore_id: choreId,
+      household_id: householdId,
+      done_by_user_id: userId,
+      done_at: Timestamp.now(),
+    });
+  } catch (error) {
+    console.error('Error completing chore:', error);
+    throw new Error('Failed to complete chore', { cause: error });
   }
 }
