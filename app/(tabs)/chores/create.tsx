@@ -1,10 +1,10 @@
-import { View, Text, TextInput, StyleSheet, Alert, ScrollView, TouchableOpacity, Modal } from 'react-native';
-import { IconButton } from 'react-native-paper';
-import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createChore } from '../../../api/chores';
-import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
+import { useState } from 'react';
+import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { IconButton } from 'react-native-paper';
+import { choreKeys, createChore } from '../../../api/chores';
 import { currentHouseholdAtom } from '../../../atoms';
 
 
@@ -25,8 +25,11 @@ export default function CreateChoreScreen() {
 
   const mutation = useMutation({
     mutationFn: createChore,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['chores'] });
+    onSuccess: (data, variables) => {
+
+      queryClient.invalidateQueries({
+        queryKey: choreKeys.list(variables.household_id)
+      });
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
@@ -84,7 +87,7 @@ export default function CreateChoreScreen() {
 
 
       <ScrollView style={styles.form}>
-     
+
         <TextInput
           style={styles.input}
           placeholder="Titel"
@@ -104,7 +107,6 @@ export default function CreateChoreScreen() {
           placeholderTextColor="#C0C0C0"
         />
 
-
         <TouchableOpacity
           style={styles.card}
           onPress={() => setShowFrequencyPicker(true)}
@@ -118,7 +120,6 @@ export default function CreateChoreScreen() {
             <Text style={styles.varText}>dag</Text>
           </View>
         </TouchableOpacity>
-
 
         <TouchableOpacity
           style={styles.card}

@@ -24,10 +24,11 @@ export default function TabLayout() {
         name="chores"
         options={{
           title: 'Chores',
+          href: null,
         }}
       />
       <Tabs.Screen
-        name="household/index"
+        name="household"
         options={{
           title: 'Households',
         }}

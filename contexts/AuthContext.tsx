@@ -1,10 +1,8 @@
+import { createUser, signInUser, signOutUser } from '@/api/auth';
 import { auth } from '@/firebase-config';
 import {
     User,
-    createUserWithEmailAndPassword,
     onAuthStateChanged,
-    signInWithEmailAndPassword,
-    signOut
 } from 'firebase/auth';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
@@ -33,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const login = async (email: string, password: string) => {
         try {
-            await signInWithEmailAndPassword(auth, email, password);
+            await signInUser({ email, password });
         } catch (error) {
             console.error('Login error:', error);
             throw error;
@@ -42,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const register = async (email: string, password: string) => {
         try {
-            await createUserWithEmailAndPassword(auth, email, password);
+            await createUser({ email, password });
         } catch (error) {
             console.error('Register error:', error);
             throw error;
@@ -51,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const logout = async () => {
         try {
-            await signOut(auth);
+            await signOutUser();
         } catch (error) {
             console.error('Logout error:', error);
             throw error;
