@@ -1,5 +1,13 @@
 import { db } from '@/firebase-config';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  getDocs,
+  query,
+  serverTimestamp,
+  where,
+  writeBatch,
+} from 'firebase/firestore';
 
 // Query Keys för React Query cache management
 export const householdKeys = {
@@ -22,4 +30,43 @@ export async function getHouseholds(userId: string) {
   const snap2 = await getDocs(q2);
 
   return snap2.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+export interface CreateHouseholdInput {
+  name: string;
+  ownerId: string;
+}
+
+function generateCode(length = 8) {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789';
+  return Array.from({ length }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join(
+    '',
+  );
+}
+
+export async function createHousehold({ name, ownerId }: CreateHouseholdInput) {
+  const batch = writeBatch(db);
+  const householdRef = doc(collection(db, 'household'));
+  const memberRef = doc(collection(db, 'member'));
+  const now = serverTimestamp();
+  const code = generateCode();
+
+  batch.set(householdRef, {
+    name,
+    code,
+    owner_id: ownerId,
+    created_at: now,
+    updated_at: now,
+  });
+
+  batch.set(memberRef, {
+    household_id: householdRef.id,
+    user_id: ownerId,
+    is_admin: 'true',
+    created_at: now,
+  });
+
+  await batch.commit();
+
+  return { id: householdRef.id, name, code };
 }
