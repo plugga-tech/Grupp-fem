@@ -1,5 +1,6 @@
 import { db } from '@/firebase-config';
 import {
+  addDoc,
   collection,
   doc,
   getDocs,
@@ -69,4 +70,43 @@ export async function createHousehold({ name, ownerId }: CreateHouseholdInput) {
   await batch.commit();
 
   return { id: householdRef.id, name, code };
+}
+
+export interface JoinHouseholdInput {
+  code: string;
+  userId: string;
+}
+
+export async function joinHouseholdByCode({ code, userId }: JoinHouseholdInput) {
+  const normalizedCode = code.trim().toUpperCase();
+
+  // 1. Leta upp hushållet på koden
+  const householdQuery = query(collection(db, 'household'), where('code', '==', normalizedCode));
+  const householdSnap = await getDocs(householdQuery);
+  if (householdSnap.empty) {
+    throw new Error('Koden hittades inte.');
+  }
+  const householdDoc = householdSnap.docs[0];
+  const householdId = householdDoc.id;
+
+  // 2. Kolla att användaren inte redan är medlem
+  const membershipQuery = query(
+    collection(db, 'member'),
+    where('user_id', '==', userId),
+    where('household_id', '==', householdId),
+  );
+  const membershipSnap = await getDocs(membershipQuery);
+  if (!membershipSnap.empty) {
+    throw new Error('Du är redan medlem i det här hushållet.');
+  }
+
+  // 3. Lägg till medlemskap
+  await addDoc(collection(db, 'member'), {
+    household_id: householdId,
+    user_id: userId,
+    is_admin: false,
+    created_at: serverTimestamp(),
+  });
+
+  return { id: householdId, ...householdDoc.data() };
 }
