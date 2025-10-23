@@ -271,4 +271,29 @@ export default function EditChoreScreen() {
         </View>
       )}
 
-      
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={styles.saveButton}
+          onPress={handleSave}
+          disabled={updateMutation.isPending || deleteMutation.isPending}
+        >
+          <View style={styles.circleIcon}>
+            <Text style={styles.checkIcon}>+</Text>
+          </View>
+          <Text style={styles.saveButtonText}>Spara</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={() => router.push(`/chores/details/${id}`)}
+          disabled={updateMutation.isPending || deleteMutation.isPending}
+        >
+          <View style={[styles.circleIcon, styles.circleIconDark]}>
+            <Text style={[styles.checkIcon, styles.checkIconDark]}>×</Text>
+          </View>
+          <Text style={styles.closeButtonText}>Stäng</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
