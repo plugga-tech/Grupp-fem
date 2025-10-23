@@ -29,7 +29,7 @@ export default function EditChoreScreen() {
   });
 
   const chore = chores?.find((c) => c.id === id);
-
+  
   useEffect(() => {
     if (chore) {
       setName(chore.name);
@@ -39,6 +39,93 @@ export default function EditChoreScreen() {
     }
   }, [chore]);
 
- 
-}
+  const updateMutation = useMutation({
+    mutationFn: () => updateChore(id as string, {
+      name: name.trim(),
+      description: description.trim(),
+      frequency: frequency,
+      weight: weight,
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chores'] });
+      setShowSuccessToast(true);
+      setTimeout(() => {
+        setShowSuccessToast(false);
+        router.push(`/chores/details/${id}`);
+      }, 2000);
+    },
+    onError: (error) => {
+      console.error(error);
+      Alert.alert('Fel', 'Kunde inte uppdatera sysslan');
+    },
+  });
 
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteChore(id as string),
+    onSuccess: () => {
+      setShowDeleteToast(true);
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['chores'] });
+        setShowDeleteToast(false);
+        router.replace('/chores');
+      }, 2000);
+    },
+    onError: (error) => {
+      console.error('Error deleting chore:', error);
+    },
+  });
+
+  const handleSave = () => {
+    if (!name.trim()) {
+      Alert.alert('Fel', 'Ange ett namn för sysslan');
+      return;
+    }
+
+    updateMutation.mutate();
+  };
+
+  const handleDelete = () => {
+    deleteMutation.mutate();
+  };
+
+  const frequencyOptions = Array.from({ length: 31 }, (_, i) => i + 1);
+  const weightOptions = [1, 2, 4, 6, 8];
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color="#4A90E2" />
+      </View>
+    );
+  }
+
+  if (!chore) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color="#4A90E2" />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+
+      <View style={styles.header}>
+        <IconButton 
+          icon="arrow-left" 
+          size={24}
+          onPress={() => router.back()}
+          style={{ margin: 0 }}
+        />
+        <Text style={styles.headerTitle}>Ändra syssla</Text>
+        <IconButton 
+          icon="delete-outline" 
+          size={24}
+          onPress={handleDelete}
+          style={{ margin: 0 }}
+          iconColor="#CD5D6F"
+          disabled={deleteMutation.isPending}
+        />
+      </View>
+
+     
