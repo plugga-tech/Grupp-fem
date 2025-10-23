@@ -128,4 +128,52 @@ export default function EditChoreScreen() {
         />
       </View>
 
-     
+      <ScrollView style={styles.form}>
+      
+        <TextInput
+          style={styles.input}
+          placeholder="Titel"
+          value={name}
+          onChangeText={setName}
+          placeholderTextColor="#C0C0C0"
+        />
+
+        <TextInput
+          style={[styles.input, styles.textArea]}
+          placeholder="Beskrivning"
+          value={description}
+          onChangeText={setDescription}
+          multiline
+          numberOfLines={4}
+          placeholderTextColor="#C0C0C0"
+        />
+
+        <TouchableOpacity 
+          style={styles.card}
+          onPress={() => setShowFrequencyPicker(true)}
+        >
+          <Text style={styles.cardLabel}>Återkommer:</Text>
+          <View style={styles.frequencyContainer}>
+            <Text style={styles.varText}>var</Text>
+            <View style={styles.numberBadgeGreen}>
+              <Text style={styles.numberBadgeText}>{frequency}</Text>
+            </View>
+            <Text style={styles.varText}>dag</Text>
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.card}
+          onPress={() => setShowWeightPicker(true)}
+        >
+          <View>
+            <Text style={styles.cardLabel}>Värde:</Text>
+            <Text style={styles.cardSubtitle}>Hur energikrävande är sysslan?</Text>
+          </View>
+          <View style={styles.numberBadgeGray}>
+            <Text style={styles.numberBadgeText}>{weight}</Text>
+          </View>
+        </TouchableOpacity>
+      </ScrollView>
+
+      
