@@ -1,10 +1,10 @@
-import { View, Text, TextInput, StyleSheet, Alert, ScrollView, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
-import { IconButton } from 'react-native-paper';
-import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getChoresWithStatus, updateChore, deleteChore } from '../../../../api/chores';
-import { useState, useEffect } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { IconButton } from 'react-native-paper';
+import { deleteChore, getChoresWithStatus, updateChore } from '../../../../api/chores';
 import { currentHouseholdAtom } from '../../../../atoms';
 
 export default function EditChoreScreen() {
