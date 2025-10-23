@@ -77,5 +77,35 @@ export default function ChoreDetailsScreen() {
   }
 
   return (
-    
-});
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <IconButton 
+          icon="arrow-left" 
+          size={24}
+          onPress={() => router.back()}
+          style={{ margin: 0 }}
+        />
+        <Text style={styles.headerTitle}>Sysslans information</Text>
+        
+        {isCompletedToday ? (
+          <IconButton 
+            icon="delete-outline"
+            size={24}
+            onPress={() => deleteMutation.mutate()}
+            style={{ margin: 0 }}
+            iconColor="#CD5D6F"
+            disabled={deleteMutation.isPending}
+          />
+        ) : (
+          <IconButton 
+            icon="lead-pencil"
+            size={24}
+            onPress={() => router.push(`/chores/edit/${chore.id}`)}
+            style={{ margin: 0 }}
+            iconColor="#4A90E2"
+          />
+        )}
+      </View>
+
+     
