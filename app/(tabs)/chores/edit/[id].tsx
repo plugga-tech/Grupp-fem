@@ -260,4 +260,15 @@ export default function EditChoreScreen() {
         </TouchableOpacity>
       </Modal>
 
-     
+      {showSuccessToast && (
+        <View style={styles.successToast}>
+          <Text style={styles.successToastText}>✅ Sysslan har sparats</Text>
+        </View>
+      )}
+      {showDeleteToast && (
+        <View style={styles.deleteToast}>
+          <Text style={styles.deleteToastText}>🗑️ Sysslan har tagits bort</Text>
+        </View>
+      )}
+
+      
