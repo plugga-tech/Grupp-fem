@@ -84,7 +84,7 @@ export async function joinHouseholdByCode({ code, userId }: JoinHouseholdInput) 
   const householdQuery = query(collection(db, 'household'), where('code', '==', normalizedCode));
   const householdSnap = await getDocs(householdQuery);
   if (householdSnap.empty) {
-    throw new Error('Koden hittades inte.');
+    throw new Error('Hushållet hittades inte.');
   }
   const householdDoc = householdSnap.docs[0];
   const householdId = householdDoc.id;
