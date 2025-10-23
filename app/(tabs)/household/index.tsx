@@ -1,4 +1,9 @@
-import { createHousehold, getHouseholds, householdKeys } from '@/api/household';
+import {
+  createHousehold,
+  getHouseholds,
+  householdKeys,
+  joinHouseholdByCode,
+} from '@/api/household';
 import CreateHouseholdModal from '@/components/CreateHouseholdModal';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
@@ -6,21 +11,29 @@ import { getAuth } from 'firebase/auth';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { Appbar, Badge, Button, Card, IconButton, List } from 'react-native-paper';
 import React, { useState } from 'react';
+import JoinHouseholdModal from '@/components/JoinHouseholdModal';
 
 export default function HouseholdScreen() {
+  const router = useRouter();
+  const auth = getAuth();
+  const userId = auth.currentUser?.uid ?? null;
+
   const queryClient = useQueryClient();
+  const [createOpen, setCreateOpen] = useState(false);
+  const [joinOpen, setJoinOpen] = useState(false);
+
   const createMutation = useMutation({
     mutationFn: (name: string) => createHousehold({ name, ownerId: userId! }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: householdKeys.list(userId!) });
     },
   });
-
-  const router = useRouter();
-  const auth = getAuth();
-  const userId = auth.currentUser?.uid ?? null;
-
-  const [createOpen, setCreateOpen] = useState(false);
+  const joinMutation = useMutation({
+    mutationFn: (code: string) => joinHouseholdByCode({ code, userId: userId! }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: householdKeys.list(userId!) });
+    },
+  });
 
   type Household = {
     id: string;
@@ -96,9 +109,7 @@ export default function HouseholdScreen() {
         >
           Skapa
         </Button>
-        <Button mode="contained" icon="key-variant" style={styles.barBtn} onPress={() => {}}>
-          Gå med
-        </Button>
+        <Button onPress={() => setJoinOpen(true)}>Gå med</Button>
       </View>
       <CreateHouseholdModal
         visible={createOpen}
@@ -114,6 +125,17 @@ export default function HouseholdScreen() {
         error={createMutation.error ? (createMutation.error as Error).message : null}
         result={createMutation.data ?? null}
       />
+      <JoinHouseholdModal
+        visible={joinOpen}
+        onClose={() => {
+          setJoinOpen(false);
+          joinMutation.reset();
+        }}
+        onSubmit={(code) => userId && joinMutation.mutate(code)}
+        pending={joinMutation.isPending}
+        error={joinMutation.error ? (joinMutation.error as Error).message : null}
+        result={joinMutation.data ?? null}
+      />
     </View>
   );
 }
@@ -121,7 +143,7 @@ export default function HouseholdScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 4,
+    paddingTop: 2,
   },
   sectionHeader: {
     flexDirection: 'row',
