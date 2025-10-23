@@ -220,4 +220,44 @@ export default function EditChoreScreen() {
         </TouchableOpacity>
       </Modal>
 
-      
+      {/* Weight Picker Modal */}
+      <Modal
+        visible={showWeightPicker}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowWeightPicker(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowWeightPicker(false)}
+        >
+          <View style={styles.pickerContainer}>
+            <Text style={styles.pickerTitle}>Värde väljare</Text>
+            <View style={styles.weightPickerRow}>
+              {weightOptions.map((num) => (
+                <TouchableOpacity
+                  key={num}
+                  onPress={() => {
+                    setWeight(num);
+                    setShowWeightPicker(false);
+                  }}
+                  style={[
+                    styles.weightPickerItem,
+                    weight === num && styles.weightPickerItemActive
+                  ]}
+                >
+                  <Text style={[
+                    styles.pickerText,
+                    weight === num && styles.pickerTextActive
+                  ]}>
+                    {num}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+     
