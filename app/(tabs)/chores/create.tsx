@@ -7,10 +7,12 @@ import { IconButton } from 'react-native-paper';
 import { choreKeys, createChore } from '../../../api/chores';
 import { currentHouseholdAtom } from '../../../atoms';
 
+
 export default function CreateChoreScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [currentHousehold] = useAtom(currentHouseholdAtom);
+
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -19,6 +21,7 @@ export default function CreateChoreScreen() {
   const [showFrequencyPicker, setShowFrequencyPicker] = useState(false);
   const [showWeightPicker, setShowWeightPicker] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+
 
   const mutation = useMutation({
     mutationFn: createChore,
@@ -39,16 +42,19 @@ export default function CreateChoreScreen() {
     },
   });
 
+
   const handleSave = () => {
     if (!name.trim()) {
       Alert.alert('Fel', 'Ange ett namn för sysslan');
       return;
     }
 
+
     if (!currentHousehold?.id) {
       Alert.alert('Fel', 'Inget hushåll valt');
       return;
     }
+
 
     mutation.mutate({
       household_id: currentHousehold.id,
@@ -59,11 +65,14 @@ export default function CreateChoreScreen() {
     });
   };
 
+
   const frequencyOptions = Array.from({ length: 31 }, (_, i) => i + 1);
   const weightOptions = [1, 2, 4, 6, 8];
 
+
   return (
     <View style={styles.container}>
+
 
       <View style={styles.header}>
         <IconButton
@@ -76,6 +85,7 @@ export default function CreateChoreScreen() {
         <View style={{ width: 48 }} />
       </View>
 
+
       <ScrollView style={styles.form}>
 
         <TextInput
@@ -85,6 +95,7 @@ export default function CreateChoreScreen() {
           onChangeText={setName}
           placeholderTextColor="#C0C0C0"
         />
+
 
         <TextInput
           style={[styles.input, styles.textArea]}
@@ -103,7 +114,7 @@ export default function CreateChoreScreen() {
           <Text style={styles.cardLabel}>Återkommer:</Text>
           <View style={styles.frequencyContainer}>
             <Text style={styles.varText}>var</Text>
-            <View style={styles.numberBadge}>
+            <View style={styles.numberBadgeGreen}>
               <Text style={styles.numberBadgeText}>{frequency}</Text>
             </View>
             <Text style={styles.varText}>dag</Text>
@@ -123,6 +134,7 @@ export default function CreateChoreScreen() {
           </View>
         </TouchableOpacity>
       </ScrollView>
+
 
       {/* Frequency Picker Modal */}
       <Modal
@@ -168,6 +180,7 @@ export default function CreateChoreScreen() {
         </TouchableOpacity>
       </Modal>
 
+
       {/* Weight Picker Modal */}
       <Modal
         visible={showWeightPicker}
@@ -208,11 +221,13 @@ export default function CreateChoreScreen() {
         </TouchableOpacity>
       </Modal>
 
+
       {showSuccess && (
         <View style={styles.successToast}>
           <Text style={styles.successToastText}>✅ Sysslan har sparats</Text>
         </View>
       )}
+
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity
@@ -240,6 +255,7 @@ export default function CreateChoreScreen() {
   );
 }
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -256,7 +272,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E0E0E0',
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 23,
     fontWeight: '600',
     color: '#000',
   },
@@ -307,8 +323,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
   },
-  numberBadge: {
-    backgroundColor: '#CD5D6F',
+  numberBadgeGreen: {
+    backgroundColor: '#6AC08B',
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -417,7 +433,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   pickerItemActive: {
-    backgroundColor: '#CD5D6F',
+    backgroundColor: '#6AC08B',
   },
   pickerText: {
     fontSize: 16,
