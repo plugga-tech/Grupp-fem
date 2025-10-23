@@ -114,4 +114,9 @@ export default function ChoreDetailsScreen() {
           <Text style={styles.choreName}>{chore.name}</Text>
         </View>
 
-        
+        {/* Beskrivning */}
+        <View style={styles.card}>
+          <Text style={styles.description}>{chore.description}</Text>
+        </View>
+
+      
