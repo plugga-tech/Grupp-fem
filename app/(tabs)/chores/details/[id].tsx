@@ -119,4 +119,18 @@ export default function ChoreDetailsScreen() {
           <Text style={styles.description}>{chore.description}</Text>
         </View>
 
-      
+        {/* Återkommer */}
+        <View style={styles.infoCard}>
+          <Text style={styles.infoLabel}>Återkommer:</Text>
+          <View style={styles.frequencyContainer}>
+            <Text style={styles.varText}>var</Text>
+            <View style={[
+              styles.numberBadge,
+              chore.is_overdue ? styles.numberBadgeRed : styles.numberBadgeGreen
+            ]}>
+              <Text style={styles.numberBadgeText}>{chore.frequency}</Text>
+            </View>
+            <Text style={styles.varText}>dag</Text>
+          </View>
+        </View>
+
