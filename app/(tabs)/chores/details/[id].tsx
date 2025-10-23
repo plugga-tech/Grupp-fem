@@ -78,7 +78,7 @@ export default function ChoreDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+
       <View style={styles.header}>
         <IconButton 
           icon="arrow-left" 
@@ -109,17 +109,15 @@ export default function ChoreDetailsScreen() {
       </View>
 
       <ScrollView style={styles.content}>
-        {/* Namn */}
+
         <View style={styles.card}>
           <Text style={styles.choreName}>{chore.name}</Text>
         </View>
 
-        {/* Beskrivning */}
         <View style={styles.card}>
           <Text style={styles.description}>{chore.description}</Text>
         </View>
 
-        {/* Återkommer */}
         <View style={styles.infoCard}>
           <Text style={styles.infoLabel}>Återkommer:</Text>
           <View style={styles.frequencyContainer}>
@@ -134,7 +132,6 @@ export default function ChoreDetailsScreen() {
           </View>
         </View>
 
-        {/* Värde */}
         <View style={styles.infoCard}>
           <View>
             <Text style={styles.infoLabel}>Värde:</Text>
@@ -146,7 +143,6 @@ export default function ChoreDetailsScreen() {
         </View>
       </ScrollView>
 
-      {/* Success meddelande eller Markera knapp */}
       {isCompletedToday ? (
         <View style={styles.completedContainer}>
           <Text style={styles.completedText}>✅ Sysslan är markerad som gjord!</Text>
@@ -165,7 +161,6 @@ export default function ChoreDetailsScreen() {
         </View>
       )}
 
-      {/* Delete Toast */}
       {showDeleteToast && (
         <View style={styles.deleteToast}>
           <Text style={styles.deleteToastText}>🗑️ Sysslan är borttagen!</Text>
