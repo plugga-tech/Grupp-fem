@@ -37,7 +37,7 @@ export default function ChoreDetailsScreen() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chores'] });
       setTimeout(() => {
-        router.back();
+        router.push('/chores');
       }, 2000);
     },
     onError: (error) => {
@@ -83,7 +83,7 @@ export default function ChoreDetailsScreen() {
         <IconButton 
           icon="arrow-left" 
           size={24}
-          onPress={() => router.back()}
+          onPress={() => router.push('/chores')}
           style={{ margin: 0 }}
         />
         <Text style={styles.headerTitle}>Sysslans information</Text>
