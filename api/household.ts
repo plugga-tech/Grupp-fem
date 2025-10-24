@@ -24,6 +24,7 @@ export interface JoinHouseholdInput {
 
 // api/household.ts
 export interface HouseholdMember {
+  userId: string;
   name: string | null;
   isAdmin: boolean;
   avatar?: AvatarKey | null;
@@ -157,6 +158,7 @@ export async function getHouseholdMembers(householdId: string): Promise<Househol
   return membersSnap.docs.map((memberDoc) => {
     const data = memberDoc.data();
     return {
+      userId: data.user_id as string,
       name: (data.name as string | undefined) ?? null,
       isAdmin: data.is_admin === true || data.is_admin === 'true',
       avatar: (data.avatar as AvatarKey | undefined) ?? null,

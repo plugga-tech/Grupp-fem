@@ -1,10 +1,12 @@
 import { getHouseholdMembers, householdKeys } from '@/api/household';
+import { AppHeader } from '@/app/components/AppHeader';
 import { AVATAR_COLORS, AVATAR_EMOJI, AvatarKey } from '@/app/utils/avatar';
 import { useQuery } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { getAuth } from 'firebase/auth';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Appbar, Badge, Card, TextInput } from 'react-native-paper';
+import { Badge, Card, TextInput } from 'react-native-paper';
 
 const getAvatarEmoji = (key?: AvatarKey | null) => (key ? AVATAR_EMOJI[key] : '');
 const getAvatarColor = (key?: AvatarKey | null) => (key ? AVATAR_COLORS[key] : 'transparent');
@@ -23,40 +25,44 @@ export default function HouseholdInfoScreen() {
     queryFn: () => getHouseholdMembers(id),
   });
 
+  const userId = getAuth().currentUser?.uid;
+  const currentMember = members.find((m) => m.userId === userId);
+  const canEdit = currentMember?.isAdmin ?? false;
+
   const [householdName, setHouseholdName] = useState(name);
   const [isEditingName, setIsEditingName] = useState(false);
 
   const handleToggleEdit = () => {
-    if (isEditingName) {
-      setIsEditingName(false);
-    } else {
-      setIsEditingName(true);
-    }
+    if (!canEdit) return;
+    setIsEditingName((prev) => !prev);
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, paddingTop: 2 }}>
       <Stack.Screen options={{ headerShown: false }} />
-      <Appbar.Header mode="center-aligned">
-        <Appbar.Action icon="arrow-left" onPress={() => router.back()} />
-
-        <View style={styles.titleContainer}>
-          {isEditingName ? (
+      <AppHeader
+        leftAction={{ icon: 'arrow-left', onPress: () => router.back() }}
+        rightActions={
+          canEdit
+            ? [{ icon: isEditingName ? 'check' : 'pen', onPress: handleToggleEdit }]
+            : undefined
+        }
+        title={isEditingName ? undefined : householdName ?? 'Hushåll'}
+        titleContent={
+          isEditingName ? (
             <TextInput
+              mode="flat"
               style={styles.titleInput}
-              value={householdName}
+              value={householdName ?? ''}
               onChangeText={setHouseholdName}
               autoFocus
-              onSubmitEditing={handleToggleEdit}
               returnKeyType="done"
+              onSubmitEditing={handleToggleEdit}
+              placeholder="Namn på hushållet"
             />
-          ) : (
-            <Text>{householdName}</Text>
-          )}
-        </View>
-
-        <Appbar.Action icon={isEditingName ? 'check' : 'pen'} onPress={handleToggleEdit} />
-      </Appbar.Header>
+          ) : undefined
+        }
+      />
 
       <Card style={styles.infoCard}>
         <Card.Content>
@@ -96,7 +102,7 @@ export default function HouseholdInfoScreen() {
 const styles = StyleSheet.create({
   titleContainer: {
     flex: 1,
-    alignItems: 'center',
+    paddingTop: 2,
   },
   titleInput: {
     minWidth: 180,
