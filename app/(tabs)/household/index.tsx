@@ -1,42 +1,24 @@
-import {
-  createHousehold,
-  getHouseholds,
-  householdKeys,
-  joinHouseholdByCode,
-} from '@/api/household';
+import { getHouseholds, householdKeys } from '@/api/household';
 import CreateHouseholdModal from '@/app/(tabs)/household/components/CreateHouseholdModal';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter, Stack } from 'expo-router';
 import { getAuth } from 'firebase/auth';
 import { StyleSheet, Text, View } from 'react-native';
-import { Appbar } from 'react-native-paper';
 import React, { useState } from 'react';
 import JoinHouseholdModal from '@/app/(tabs)/household/components/JoinHouseholdModal';
 import { AvatarKey } from '@/app/utils/avatar';
 import { HouseholdList } from './components/HouseholdList';
 import { AppHeader } from '@/app/components/AppHeader';
+import { useHouseholdMutations } from '@/hooks/useHouseholdMutations';
 
 export default function HouseholdScreen() {
   const router = useRouter();
   const auth = getAuth();
   const userId = auth.currentUser?.uid ?? null;
+  const { createHouseholdMutation, joinHouseholdMutation } = useHouseholdMutations(userId ?? '');
 
-  const queryClient = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
-
-  const createMutation = useMutation({
-    mutationFn: (name: string) => createHousehold({ name, ownerId: userId! }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: householdKeys.list(userId!) });
-    },
-  });
-  const joinMutation = useMutation({
-    mutationFn: (code: string) => joinHouseholdByCode({ code, userId: userId! }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: householdKeys.list(userId!) });
-    },
-  });
 
   type Household = {
     id: string;
@@ -56,6 +38,7 @@ export default function HouseholdScreen() {
 
   return (
     <View style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
       <AppHeader
         title="Dina hushåll"
         rightActions={[{ icon: 'account', onPress: () => {} }]}
@@ -78,26 +61,28 @@ export default function HouseholdScreen() {
         visible={createOpen}
         onClose={() => {
           setCreateOpen(false);
-          createMutation.reset();
+          createHouseholdMutation.reset();
         }}
         onSubmit={(name) => {
           if (!userId) return;
-          createMutation.mutate(name);
+          createHouseholdMutation.mutate(name);
         }}
-        pending={createMutation.isPending}
-        error={createMutation.error ? (createMutation.error as Error).message : null}
-        result={createMutation.data ?? null}
+        pending={createHouseholdMutation.isPending}
+        error={
+          createHouseholdMutation.error ? (createHouseholdMutation.error as Error).message : null
+        }
+        result={createHouseholdMutation.data ?? null}
       />
       <JoinHouseholdModal
         visible={joinOpen}
         onClose={() => {
           setJoinOpen(false);
-          joinMutation.reset();
+          joinHouseholdMutation.reset();
         }}
-        onSubmit={(code) => userId && joinMutation.mutate(code)}
-        pending={joinMutation.isPending}
-        error={joinMutation.error ? (joinMutation.error as Error).message : null}
-        result={joinMutation.data ?? null}
+        onSubmit={(code) => userId && joinHouseholdMutation.mutate(code)}
+        pending={joinHouseholdMutation.isPending}
+        error={joinHouseholdMutation.error ? (joinHouseholdMutation.error as Error).message : null}
+        result={joinHouseholdMutation.data ?? null}
       />
     </View>
   );
