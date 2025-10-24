@@ -1,14 +1,35 @@
+import { AvatarKey, giveRandomAvatar } from '@/app/utils/avatar';
 import { db } from '@/firebase-config';
 import {
   addDoc,
   collection,
   doc,
+  getCountFromServer,
   getDocs,
   query,
   serverTimestamp,
+  updateDoc,
   where,
   writeBatch,
 } from 'firebase/firestore';
+
+export interface CreateHouseholdInput {
+  name: string;
+  ownerId: string;
+}
+
+export interface JoinHouseholdInput {
+  code: string;
+  userId: string;
+}
+
+// api/household.ts
+export interface HouseholdMember {
+  userId: string;
+  name: string | null;
+  isAdmin: boolean;
+  avatar?: AvatarKey | null;
+}
 
 // Query Keys för React Query cache management
 export const householdKeys = {
@@ -17,7 +38,13 @@ export const householdKeys = {
   list: (userId: string) => [...householdKeys.lists(), userId] as const,
   details: () => [...householdKeys.all, 'detail'] as const,
   detail: (id: string) => [...householdKeys.details(), id] as const,
+  members: (householdId: string) => [...householdKeys.detail(householdId)],
 };
+
+export async function updateHouseholdName(householdId: string, name: string) {
+  const ref = doc(db, 'household', householdId);
+  await updateDoc(ref, { name, updated_at: serverTimestamp() });
+}
 
 export async function getHouseholds(userId: string) {
   const ref = collection(db, 'member');
@@ -30,12 +57,27 @@ export async function getHouseholds(userId: string) {
   const q2 = query(collection(db, 'household'), where('__name__', 'in', householdIds));
   const snap2 = await getDocs(q2);
 
-  return snap2.docs.map((d) => ({ id: d.id, ...d.data() }));
-}
+  const membersCountByHousehold: Record<string, number> = {};
+  for (const houseDoc of snap2.docs) {
+    const countSnap = await getCountFromServer(
+      query(collection(db, 'member'), where('household_id', '==', houseDoc.id)),
+    );
+    membersCountByHousehold[houseDoc.id] = countSnap.data().count;
+  }
 
-export interface CreateHouseholdInput {
-  name: string;
-  ownerId: string;
+  const memberByHousehold = Object.fromEntries(
+    snapshot.docs.map((memberDoc) => {
+      const data = memberDoc.data();
+      return [data.household_id as string, data.avatar];
+    }),
+  );
+
+  return snap2.docs.map((houseDoc) => ({
+    id: houseDoc.id,
+    ...houseDoc.data(),
+    avatar: memberByHousehold[houseDoc.id] ?? null,
+    membersCount: membersCountByHousehold[houseDoc.id] ?? 0,
+  }));
 }
 
 function generateCode(length = 8) {
@@ -60,21 +102,19 @@ export async function createHousehold({ name, ownerId }: CreateHouseholdInput) {
     updated_at: now,
   });
 
+  const avatar = giveRandomAvatar();
+
   batch.set(memberRef, {
     household_id: householdRef.id,
     user_id: ownerId,
     is_admin: 'true',
     created_at: now,
+    avatar,
   });
 
   await batch.commit();
 
   return { id: householdRef.id, name, code };
-}
-
-export interface JoinHouseholdInput {
-  code: string;
-  userId: string;
 }
 
 export async function joinHouseholdByCode({ code, userId }: JoinHouseholdInput) {
@@ -100,13 +140,34 @@ export async function joinHouseholdByCode({ code, userId }: JoinHouseholdInput) 
     throw new Error('Du är redan medlem i det här hushållet.');
   }
 
+  const avatar = giveRandomAvatar();
+
   // 3. Lägg till medlemskap
   await addDoc(collection(db, 'member'), {
     household_id: householdId,
     user_id: userId,
     is_admin: false,
     created_at: serverTimestamp(),
+    avatar,
   });
 
   return { id: householdId, ...householdDoc.data() };
+}
+
+//Members
+
+export async function getHouseholdMembers(householdId: string): Promise<HouseholdMember[]> {
+  const membersSnap = await getDocs(
+    query(collection(db, 'member'), where('household_id', '==', householdId)),
+  );
+
+  return membersSnap.docs.map((memberDoc) => {
+    const data = memberDoc.data();
+    return {
+      userId: data.user_id as string,
+      name: (data.name as string | undefined) ?? null,
+      isAdmin: data.is_admin === true || data.is_admin === 'true',
+      avatar: (data.avatar as AvatarKey | undefined) ?? null,
+    };
+  });
 }
