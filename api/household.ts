@@ -4,6 +4,7 @@ import {
   collection,
   doc,
   getCountFromServer,
+  getDoc,
   getDocs,
   query,
   serverTimestamp,
@@ -58,6 +59,7 @@ export const householdKeys = {
   list: (userId: string) => [...householdKeys.lists(), userId] as const,
   details: () => [...householdKeys.all, 'detail'] as const,
   detail: (id: string) => [...householdKeys.details(), id] as const,
+  members: (householdId: string) => [...householdKeys.detail(householdId)],
 };
 
 export async function getHouseholds(userId: string) {
@@ -176,4 +178,28 @@ export async function joinHouseholdByCode({ code, userId }: JoinHouseholdInput) 
   });
 
   return { id: householdId, ...householdDoc.data() };
+}
+
+//Members
+
+// api/household.ts
+export interface HouseholdMember {
+  name: string | null;
+  isAdmin: boolean;
+  avatar?: AvatarKey | null;
+}
+
+export async function getHouseholdMembers(householdId: string): Promise<HouseholdMember[]> {
+  const membersSnap = await getDocs(
+    query(collection(db, 'member'), where('household_id', '==', householdId)),
+  );
+
+  return membersSnap.docs.map((memberDoc) => {
+    const data = memberDoc.data();
+    return {
+      name: (data.name as string | undefined) ?? null,
+      isAdmin: data.is_admin === true || data.is_admin === 'true',
+      avatar: (data.avatar as AvatarKey | undefined) ?? null,
+    };
+  });
 }
