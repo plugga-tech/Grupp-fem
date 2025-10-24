@@ -1,5 +1,6 @@
 import { Appbar } from 'react-native-paper';
 import React from 'react';
+import { View } from 'react-native';
 
 type AppHeaderAction = {
   icon: string;
@@ -8,12 +9,13 @@ type AppHeaderAction = {
 };
 
 type AppHeaderProps = {
-  title: string;
+  title?: string;
+  titleContent?: React.ReactNode;
   leftAction?: AppHeaderAction;
   rightActions?: AppHeaderAction[];
 };
 
-export function AppHeader({ title, leftAction, rightActions = [] }: AppHeaderProps) {
+export function AppHeader({ title, titleContent, leftAction, rightActions = [] }: AppHeaderProps) {
   return (
     <Appbar.Header mode="center-aligned">
       {leftAction ? (
@@ -25,7 +27,12 @@ export function AppHeader({ title, leftAction, rightActions = [] }: AppHeaderPro
       ) : (
         <Appbar.Action icon="menu" onPress={() => {}} />
       )}
-      <Appbar.Content title={title} />
+      {titleContent ? (
+        <View style={{ flex: 1, alignItems: 'center' }}>{titleContent}</View>
+      ) : (
+        <Appbar.Content title={title} />
+      )}
+
       {rightActions.map((action) => (
         <Appbar.Action
           key={action.icon}
