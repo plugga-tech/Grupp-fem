@@ -1,4 +1,7 @@
 import {
+  AVATAR_COLORS,
+  AVATAR_EMOJI,
+  AvatarKey,
   createHousehold,
   getHouseholds,
   householdKeys,
@@ -12,6 +15,12 @@ import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { Appbar, Badge, Button, Card, IconButton, List } from 'react-native-paper';
 import React, { useState } from 'react';
 import JoinHouseholdModal from '@/components/JoinHouseholdModal';
+
+const getAvatarEmoji = (key?: AvatarKey) => (key ? AVATAR_EMOJI[key] : '');
+
+const getAvatarStyle = (key?: AvatarKey) => ({
+  backgroundColor: key ? AVATAR_COLORS[key] : 'transparent',
+});
 
 export default function HouseholdScreen() {
   const router = useRouter();
@@ -39,6 +48,8 @@ export default function HouseholdScreen() {
     id: string;
     name?: string;
     code?: string;
+    avatar?: AvatarKey;
+    membersCount?: number;
   };
 
   const { data: household = [], error } = useQuery<Household[]>({
@@ -87,11 +98,11 @@ export default function HouseholdScreen() {
               )}
               right={() => (
                 <View style={styles.rightBadges}>
-                  <Badge size={24} style={{ alignSelf: 'center', backgroundColor: 'green' }}>
-                    🐸
+                  <Badge size={24} style={[{ alignSelf: 'center' }, getAvatarStyle(item.avatar)]}>
+                    {getAvatarEmoji(item.avatar)}
                   </Badge>
                   <Badge size={24} style={{ alignSelf: 'center', backgroundColor: 'grey' }}>
-                    3
+                    {item.membersCount ?? 0}
                   </Badge>
                 </View>
               )}

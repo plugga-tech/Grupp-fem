@@ -3,6 +3,7 @@ import {
   addDoc,
   collection,
   doc,
+  getCountFromServer,
   getDocs,
   query,
   serverTimestamp,
@@ -10,10 +11,44 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 
-const AVATARS = ['Fox', 'Pig', 'Frog', 'Chicken', 'Octopus', 'Dolphin', 'Owl', 'Unicorn'];
+export const AVATAR_KEYS = [
+  'Fox',
+  'Pig',
+  'Frog',
+  'Chicken',
+  'Octopus',
+  'Dolphin',
+  'Owl',
+  'Unicorn',
+] as const;
 
-function giveAvatar() {
-  return AVATARS[Math.floor(Math.random() * AVATARS.length)];
+export type AvatarKey = (typeof AVATAR_KEYS)[number];
+
+export const AVATAR_EMOJI: Record<AvatarKey, string> = {
+  Fox: '🦊',
+  Pig: '🐷',
+  Frog: '🐸',
+  Chicken: '🐥',
+  Octopus: '🐙',
+  Dolphin: '🐬',
+  Owl: '🦉',
+  Unicorn: '🦄',
+};
+
+export const AVATAR_COLORS: Record<AvatarKey, string> = {
+  Fox: '#E2701F',
+  Pig: '#F597B0',
+  Frog: '#67B430',
+  Chicken: '#F8D12C',
+  Octopus: '#9A4FB8',
+  Dolphin: '#3AA7D0',
+  Owl: '#8B6C3A',
+  Unicorn: '#B387FF',
+};
+
+function giveRandomAvatar(): AvatarKey {
+  const i = Math.floor(Math.random() * AVATAR_KEYS.length);
+  return AVATAR_KEYS[i];
 }
 
 // Query Keys för React Query cache management
@@ -36,7 +71,27 @@ export async function getHouseholds(userId: string) {
   const q2 = query(collection(db, 'household'), where('__name__', 'in', householdIds));
   const snap2 = await getDocs(q2);
 
-  return snap2.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const membersCountByHousehold: Record<string, number> = {};
+  for (const houseDoc of snap2.docs) {
+    const countSnap = await getCountFromServer(
+      query(collection(db, 'member'), where('household_id', '==', houseDoc.id)),
+    );
+    membersCountByHousehold[houseDoc.id] = countSnap.data().count;
+  }
+
+  const memberByHousehold = Object.fromEntries(
+    snapshot.docs.map((memberDoc) => {
+      const data = memberDoc.data();
+      return [data.household_id as string, data.avatar];
+    }),
+  );
+
+  return snap2.docs.map((houseDoc) => ({
+    id: houseDoc.id,
+    ...houseDoc.data(),
+    avatar: memberByHousehold[houseDoc.id] ?? null,
+    membersCount: membersCountByHousehold[houseDoc.id] ?? 0,
+  }));
 }
 
 export interface CreateHouseholdInput {
@@ -66,7 +121,7 @@ export async function createHousehold({ name, ownerId }: CreateHouseholdInput) {
     updated_at: now,
   });
 
-  const avatar = giveAvatar();
+  const avatar = giveRandomAvatar();
 
   batch.set(memberRef, {
     household_id: householdRef.id,
@@ -109,7 +164,7 @@ export async function joinHouseholdByCode({ code, userId }: JoinHouseholdInput) 
     throw new Error('Du är redan medlem i det här hushållet.');
   }
 
-  const avatar = giveAvatar();
+  const avatar = giveRandomAvatar();
 
   // 3. Lägg till medlemskap
   await addDoc(collection(db, 'member'), {
