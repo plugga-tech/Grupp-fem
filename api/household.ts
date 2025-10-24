@@ -10,6 +10,12 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 
+const AVATARS = ['Fox', 'Pig', 'Frog', 'Chicken', 'Octopus', 'Dolphin', 'Owl', 'Unicorn'];
+
+function giveAvatar() {
+  return AVATARS[Math.floor(Math.random() * AVATARS.length)];
+}
+
 // Query Keys för React Query cache management
 export const householdKeys = {
   all: ['households'] as const,
@@ -60,11 +66,14 @@ export async function createHousehold({ name, ownerId }: CreateHouseholdInput) {
     updated_at: now,
   });
 
+  const avatar = giveAvatar();
+
   batch.set(memberRef, {
     household_id: householdRef.id,
     user_id: ownerId,
     is_admin: 'true',
     created_at: now,
+    avatar,
   });
 
   await batch.commit();
@@ -100,12 +109,15 @@ export async function joinHouseholdByCode({ code, userId }: JoinHouseholdInput) 
     throw new Error('Du är redan medlem i det här hushållet.');
   }
 
+  const avatar = giveAvatar();
+
   // 3. Lägg till medlemskap
   await addDoc(collection(db, 'member'), {
     household_id: householdId,
     user_id: userId,
     is_admin: false,
     created_at: serverTimestamp(),
+    avatar,
   });
 
   return { id: householdId, ...householdDoc.data() };
