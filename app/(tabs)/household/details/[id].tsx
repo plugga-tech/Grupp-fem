@@ -1,10 +1,5 @@
-import {
-  AVATAR_COLORS,
-  AVATAR_EMOJI,
-  AvatarKey,
-  getHouseholdMembers,
-  householdKeys,
-} from '@/api/household';
+import { getHouseholdMembers, householdKeys } from '@/api/household';
+import { AVATAR_COLORS, AVATAR_EMOJI, AvatarKey } from '@/app/utils/avatar';
 import { useQuery } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
