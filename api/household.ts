@@ -1,10 +1,10 @@
+import { AvatarKey, giveRandomAvatar } from '@/app/utils/avatar';
 import { db } from '@/firebase-config';
 import {
   addDoc,
   collection,
   doc,
   getCountFromServer,
-  getDoc,
   getDocs,
   query,
   serverTimestamp,
@@ -12,44 +12,21 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 
-export const AVATAR_KEYS = [
-  'Fox',
-  'Pig',
-  'Frog',
-  'Chicken',
-  'Octopus',
-  'Dolphin',
-  'Owl',
-  'Unicorn',
-] as const;
+export interface CreateHouseholdInput {
+  name: string;
+  ownerId: string;
+}
 
-export type AvatarKey = (typeof AVATAR_KEYS)[number];
+export interface JoinHouseholdInput {
+  code: string;
+  userId: string;
+}
 
-export const AVATAR_EMOJI: Record<AvatarKey, string> = {
-  Fox: '🦊',
-  Pig: '🐷',
-  Frog: '🐸',
-  Chicken: '🐥',
-  Octopus: '🐙',
-  Dolphin: '🐬',
-  Owl: '🦉',
-  Unicorn: '🦄',
-};
-
-export const AVATAR_COLORS: Record<AvatarKey, string> = {
-  Fox: '#E2701F',
-  Pig: '#F597B0',
-  Frog: '#67B430',
-  Chicken: '#F8D12C',
-  Octopus: '#9A4FB8',
-  Dolphin: '#3AA7D0',
-  Owl: '#8B6C3A',
-  Unicorn: '#B387FF',
-};
-
-function giveRandomAvatar(): AvatarKey {
-  const i = Math.floor(Math.random() * AVATAR_KEYS.length);
-  return AVATAR_KEYS[i];
+// api/household.ts
+export interface HouseholdMember {
+  name: string | null;
+  isAdmin: boolean;
+  avatar?: AvatarKey | null;
 }
 
 // Query Keys för React Query cache management
@@ -96,11 +73,6 @@ export async function getHouseholds(userId: string) {
   }));
 }
 
-export interface CreateHouseholdInput {
-  name: string;
-  ownerId: string;
-}
-
 function generateCode(length = 8) {
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789';
   return Array.from({ length }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join(
@@ -136,11 +108,6 @@ export async function createHousehold({ name, ownerId }: CreateHouseholdInput) {
   await batch.commit();
 
   return { id: householdRef.id, name, code };
-}
-
-export interface JoinHouseholdInput {
-  code: string;
-  userId: string;
 }
 
 export async function joinHouseholdByCode({ code, userId }: JoinHouseholdInput) {
@@ -181,13 +148,6 @@ export async function joinHouseholdByCode({ code, userId }: JoinHouseholdInput) 
 }
 
 //Members
-
-// api/household.ts
-export interface HouseholdMember {
-  name: string | null;
-  isAdmin: boolean;
-  avatar?: AvatarKey | null;
-}
 
 export async function getHouseholdMembers(householdId: string): Promise<HouseholdMember[]> {
   const membersSnap = await getDocs(
