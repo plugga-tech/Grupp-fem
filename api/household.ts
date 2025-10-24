@@ -8,6 +8,7 @@ import {
   getDocs,
   query,
   serverTimestamp,
+  updateDoc,
   where,
   writeBatch,
 } from 'firebase/firestore';
@@ -39,6 +40,11 @@ export const householdKeys = {
   detail: (id: string) => [...householdKeys.details(), id] as const,
   members: (householdId: string) => [...householdKeys.detail(householdId)],
 };
+
+export async function updateHouseholdName(householdId: string, name: string) {
+  const ref = doc(db, 'household', householdId);
+  await updateDoc(ref, { name, updated_at: serverTimestamp() });
+}
 
 export async function getHouseholds(userId: string) {
   const ref = collection(db, 'member');
