@@ -1,3 +1,4 @@
+import { ActiveHouseholdProvider } from '@/contexts/ActiveHouseholdContext';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { useReactQuerySetup } from '@/hooks/use-react-query-setup';
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -67,9 +68,11 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <JotaiProvider>
         <AuthProvider>
-          <PaperProvider>
-            <RootLayoutNav />
-          </PaperProvider>
+          <ActiveHouseholdProvider>
+            <PaperProvider>
+              <RootLayoutNav />
+            </PaperProvider>
+          </ActiveHouseholdProvider>
         </AuthProvider>
       </JotaiProvider>
     </QueryClientProvider>

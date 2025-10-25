@@ -37,3 +37,10 @@ export function giveRandomAvatar(): AvatarKey {
   const i = Math.floor(Math.random() * AVATAR_KEYS.length);
   return AVATAR_KEYS[i];
 }
+
+export function getAvatarInfo(avatarKey: AvatarKey): { emoji: string; color: string } {
+  return {
+    emoji: AVATAR_EMOJI[avatarKey],
+    color: AVATAR_COLORS[avatarKey],
+  };
+}

@@ -1,7 +1,7 @@
 import { AVATAR_COLORS, AVATAR_EMOJI, AvatarKey } from '@/app/utils/avatar';
 import React from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
-import { Badge, Button, Card, IconButton, List } from 'react-native-paper';
+import { Badge, Button, Card, IconButton } from 'react-native-paper';
 
 export type HouseholdSummary = {
   id: string;
@@ -9,11 +9,14 @@ export type HouseholdSummary = {
   code?: string;
   avatar?: AvatarKey | null;
   membersCount?: number;
+  isActive?: boolean; // Add this to track active household
 };
 
 type Props = {
   households: HouseholdSummary[];
+  activeHouseholdId?: string | null; // Add this prop
   onHouseholdPress: (household: HouseholdSummary) => void;
+  onSetActiveHousehold?: (household: HouseholdSummary) => void; // Add this prop
   onCreatePress: () => void;
   onJoinPress: () => void;
 };
@@ -21,7 +24,14 @@ type Props = {
 const getAvatarEmoji = (key?: AvatarKey | null) => (key ? AVATAR_EMOJI[key] : '');
 const getAvatarColor = (key?: AvatarKey | null) => (key ? AVATAR_COLORS[key] : 'transparent');
 
-export function HouseholdList({ households, onHouseholdPress, onCreatePress, onJoinPress }: Props) {
+export function HouseholdList({
+  households,
+  activeHouseholdId,
+  onHouseholdPress,
+  onSetActiveHousehold,
+  onCreatePress,
+  onJoinPress
+}: Props) {
   return (
     <>
       <View style={styles.sectionHeader}>
@@ -35,11 +45,12 @@ export function HouseholdList({ households, onHouseholdPress, onCreatePress, onJ
         contentContainerStyle={styles.listContainer}
         data={households}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <Card style={styles.card} mode="elevated">
-            <List.Item
-              title={item.name}
-              left={() => (
+        renderItem={({ item }) => {
+          const isActive = item.id === activeHouseholdId;
+
+          return (
+            <Card style={[styles.card, isActive && styles.activeCard]} mode="elevated">
+              <View style={styles.cardContent}>
                 <IconButton
                   icon="information-outline"
                   size={24}
@@ -47,23 +58,51 @@ export function HouseholdList({ households, onHouseholdPress, onCreatePress, onJ
                   onPress={() => onHouseholdPress(item)}
                   accessibilityLabel="Visa hushållsinformation"
                 />
-              )}
-              right={() => (
-                <View style={styles.badgeGroup}>
-                  <Badge
-                    size={24}
-                    style={[styles.avatarBadge, { backgroundColor: getAvatarColor(item.avatar) }]}
-                  >
-                    {getAvatarEmoji(item.avatar)}
-                  </Badge>
-                  <Badge size={24} style={styles.countBadge}>
-                    {item.membersCount ?? 0}
-                  </Badge>
+
+                <View style={styles.textSection}>
+                  <Text style={styles.cardTitle} numberOfLines={1}>
+                    {item.name}
+                  </Text>
+                  <Text style={styles.cardDescription} numberOfLines={1}>
+                    {isActive ? "Aktivt hushåll" : `Kod: ${item.code}`}
+                  </Text>
                 </View>
-              )}
-            />
-          </Card>
-        )}
+
+                <View style={styles.rightSection}>
+                  <View style={styles.badgeGroup}>
+                    <Badge
+                      size={24}
+                      style={[styles.avatarBadge, { backgroundColor: getAvatarColor(item.avatar) }]}
+                    >
+                      {getAvatarEmoji(item.avatar)}
+                    </Badge>
+                    <Badge size={24} style={styles.countBadge}>
+                      {item.membersCount ?? 0}
+                    </Badge>
+                  </View>
+
+                  {!isActive && onSetActiveHousehold && (
+                    <Button
+                      mode="outlined"
+                      compact
+                      style={styles.activateButton}
+                      labelStyle={styles.activateButtonLabel}
+                      onPress={() => onSetActiveHousehold(item)}
+                    >
+                      Aktivera
+                    </Button>
+                  )}
+
+                  {isActive && (
+                    <View style={styles.activeIndicator}>
+                      <IconButton icon="check-circle" size={20} iconColor="#4CAF50" />
+                    </View>
+                  )}
+                </View>
+              </View>
+            </Card>
+          );
+        }}
         ListEmptyComponent={<Text style={styles.emptyText}>Inga hushåll ännu.</Text>}
       />
 
@@ -88,12 +127,13 @@ const styles = StyleSheet.create({
     marginRight: 40,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1a1a1a',
   },
   sectionBadge: {
     alignSelf: 'center',
-    backgroundColor: 'grey',
+    backgroundColor: '#2196F3',
   },
   listContainer: {
     paddingHorizontal: 16,
@@ -103,9 +143,49 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
     elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    minHeight: 80, // Add minimum height to accommodate text
+  },
+  activeCard: {
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+    backgroundColor: '#E8F5E8',
   },
   infoButton: {
-    marginLeft: 10,
+    marginLeft: 4,
+  },
+  cardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    minHeight: 70,
+  },
+  textSection: {
+    flex: 1,
+    marginLeft: 8,
+    marginRight: 12,
+    justifyContent: 'center',
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1a1a1a',
+    marginBottom: 2,
+  },
+  cardDescription: {
+    fontSize: 14,
+    color: '#666666',
+    marginTop: 2,
+  },
+  rightSection: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    minWidth: 100,
   },
   badgeGroup: {
     flexDirection: 'row',
@@ -117,10 +197,31 @@ const styles = StyleSheet.create({
   },
   countBadge: {
     alignSelf: 'center',
-    backgroundColor: 'grey',
+    backgroundColor: '#FF9800',
+  },
+  activateButton: {
+    minWidth: 95,
+    height: 36,
+    paddingHorizontal: 10,
+    alignSelf: 'center',
+    justifyContent: 'center',
+  },
+  activateButtonLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginVertical: 0,
+    marginHorizontal: 4,
+  },
+  activeIndicator: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   emptyText: {
     padding: 16,
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#666666',
+    fontStyle: 'italic',
   },
   bottomBar: {
     flexDirection: 'row',
