@@ -1,5 +1,6 @@
 import { ActiveHouseholdProvider } from '@/contexts/ActiveHouseholdContext';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import { useReactQuerySetup } from '@/hooks/use-react-query-setup';
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
@@ -67,13 +68,15 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <JotaiProvider>
-        <AuthProvider>
-          <ActiveHouseholdProvider>
-            <PaperProvider>
-              <RootLayoutNav />
-            </PaperProvider>
-          </ActiveHouseholdProvider>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <ActiveHouseholdProvider>
+              <PaperProvider>
+                <RootLayoutNav />
+              </PaperProvider>
+            </ActiveHouseholdProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </JotaiProvider>
     </QueryClientProvider>
   );

@@ -1,4 +1,5 @@
 import { AVATAR_COLORS, AVATAR_EMOJI, AvatarKey } from '@/app/utils/avatar';
+import { useTheme } from '@/contexts/ThemeContext';
 import React from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { Badge, Button, Card, IconButton } from 'react-native-paper';
@@ -9,14 +10,14 @@ export type HouseholdSummary = {
   code?: string;
   avatar?: AvatarKey | null;
   membersCount?: number;
-  isActive?: boolean; // Add this to track active household
+  isActive?: boolean;
 };
 
 type Props = {
   households: HouseholdSummary[];
-  activeHouseholdId?: string | null; // Add this prop
+  activeHouseholdId?: string | null;
   onHouseholdPress: (household: HouseholdSummary) => void;
-  onSetActiveHousehold?: (household: HouseholdSummary) => void; // Add this prop
+  onSetActiveHousehold?: (household: HouseholdSummary) => void;
   onCreatePress: () => void;
   onJoinPress: () => void;
 };
@@ -32,10 +33,12 @@ export function HouseholdList({
   onCreatePress,
   onJoinPress
 }: Props) {
+  const { colors, isDark } = useTheme();
+
   return (
     <>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Hushåll</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Hushåll</Text>
         <Badge size={24} style={styles.sectionBadge}>
           {households.length}
         </Badge>
@@ -49,7 +52,11 @@ export function HouseholdList({
           const isActive = item.id === activeHouseholdId;
 
           return (
-            <Card style={[styles.card, isActive && styles.activeCard]} mode="elevated">
+            <Card style={[
+              styles.card,
+              { backgroundColor: colors.card, borderColor: colors.border },
+              isActive && [styles.activeCard, { borderColor: '#4CAF50', backgroundColor: isDark ? '#0F2F0F' : '#E8F5E8' }]
+            ]} mode="elevated">
               <View style={styles.cardContent}>
                 <IconButton
                   icon="information-outline"
@@ -60,10 +67,10 @@ export function HouseholdList({
                 />
 
                 <View style={styles.textSection}>
-                  <Text style={styles.cardTitle} numberOfLines={1}>
+                  <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={1}>
                     {item.name}
                   </Text>
-                  <Text style={styles.cardDescription} numberOfLines={1}>
+                  <Text style={[styles.cardDescription, { color: colors.textSecondary }]} numberOfLines={1}>
                     {isActive ? "Aktivt hushåll" : `Kod: ${item.code}`}
                   </Text>
                 </View>
@@ -103,7 +110,7 @@ export function HouseholdList({
             </Card>
           );
         }}
-        ListEmptyComponent={<Text style={styles.emptyText}>Inga hushåll ännu.</Text>}
+        ListEmptyComponent={<Text style={[styles.emptyText, { color: colors.textSecondary }]}>Inga hushåll ännu.</Text>}
       />
 
       <View style={styles.bottomBar}>
@@ -147,7 +154,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
-    minHeight: 80, // Add minimum height to accommodate text
+    minHeight: 80,
   },
   activeCard: {
     borderWidth: 2,
