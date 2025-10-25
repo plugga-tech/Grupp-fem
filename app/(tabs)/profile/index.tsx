@@ -8,7 +8,7 @@ import { getUserHouseholds, updateUserDisplayName } from '../../../api/user';
 import { AvatarKey, getAvatarInfo } from '../../../app/utils/avatar';
 import { useActiveHousehold } from '../../../contexts/ActiveHouseholdContext';
 import { useAuth } from '../../../contexts/AuthContext';
-import { useTheme, ThemeMode } from '../../../contexts/ThemeContext';
+import { ThemeMode, useTheme } from '../../../contexts/ThemeContext';
 
 export default function ProfileScreen() {
     const { user } = useAuth();
@@ -20,52 +20,44 @@ export default function ProfileScreen() {
     const [showAvatarSelection, setShowAvatarSelection] = useState(false);
     const [showHouseholdSelection, setShowHouseholdSelection] = useState(false);
     const queryClient = useQueryClient();
-    
-    // Auto-save name changes after 2 seconds
+
     useEffect(() => {
         const initialName = user?.displayName || '';
         const hasChanges = name !== initialName && name.trim() !== '' && name.trim() !== initialName;
-        
-        // Auto-save name after 2 seconds of no typing
+
         if (hasChanges) {
             const timeoutId = setTimeout(() => {
-                // Check if mutation is available and not pending before calling
                 if (updateNameMutation && !updateNameMutation.isPending) {
                     updateNameMutation.mutate(name.trim());
                 }
             }, 2000);
-            
+
             return () => clearTimeout(timeoutId);
         }
     }, [name, user?.displayName]);
 
-    // Get user's all households
     const { data: households = [] } = useQuery({
         queryKey: ['user-households', user?.uid],
         queryFn: () => getUserHouseholds(user!.uid),
         enabled: !!user?.uid,
     });
 
-    // Get current selected household (use global active household)
     const currentHousehold = activeHouseholdId
         ? households.find(h => h.id === activeHouseholdId)
         : households[0];
 
-    // Set global active household when households load
     useEffect(() => {
         if (households.length > 0 && !activeHouseholdId) {
             setActiveHouseholdId(households[0].id);
         }
     }, [households, activeHouseholdId, setActiveHouseholdId]);
 
-    // Get available avatars for the selected household
     const { data: availableAvatars = [] } = useQuery({
         queryKey: ['available-avatars', currentHousehold?.id],
         queryFn: () => getAvailableAvatarsForHousehold(currentHousehold!.id),
         enabled: !!currentHousehold?.id,
     });
 
-    // Update avatar mutation
     const updateAvatarMutation = useMutation({
         mutationFn: (newAvatar: AvatarKey) => {
             if (!currentHousehold?.id) {
@@ -76,11 +68,9 @@ export default function ProfileScreen() {
         onSuccess: () => {
             console.log('Avatar updated successfully, invalidating queries...');
 
-            // Invalidate user households data
             queryClient.invalidateQueries({ queryKey: ['user-households'] });
             queryClient.invalidateQueries({ queryKey: ['available-avatars'] });
 
-            // Invalidate household list (for households page)
             if (user?.uid) {
                 const householdListKey = householdKeys.list(user.uid);
                 console.log('Invalidating household list with key:', householdListKey);
@@ -96,7 +86,6 @@ export default function ProfileScreen() {
         },
     });
 
-    // Update name mutation
     const updateNameMutation = useMutation({
         mutationFn: (newName: string) => {
             if (!user) {
@@ -106,15 +95,14 @@ export default function ProfileScreen() {
         },
         onSuccess: () => {
             console.log('Name updated successfully');
-            
-            // Invalidate user households data to refresh name
+
             queryClient.invalidateQueries({ queryKey: ['user-households'] });
-            
+
             if (user?.uid) {
                 queryClient.invalidateQueries({ queryKey: householdKeys.list(user.uid) });
                 queryClient.invalidateQueries({ queryKey: householdKeys.all });
             }
-            
+
             Alert.alert('Framgång', 'Namn uppdaterat!');
         },
         onError: (error) => {
@@ -122,20 +110,17 @@ export default function ProfileScreen() {
         },
     });
 
-    // Leave household mutation
     const leaveHouseholdMutation = useMutation({
         mutationFn: (householdId: string) => leaveHousehold(user!.uid, householdId),
         onSuccess: () => {
-            // Invalidate user households data
             queryClient.invalidateQueries({ queryKey: ['user-households'] });
 
-            // Invalidate household list (for households page)
             if (user?.uid) {
                 queryClient.invalidateQueries({ queryKey: householdKeys.list(user.uid) });
                 queryClient.invalidateQueries({ queryKey: householdKeys.all });
             }
 
-            setActiveHouseholdId(null); // Reset selection
+            setActiveHouseholdId(null);
             Alert.alert('Framgång', 'Du har lämnat hushållet');
         },
         onError: (error) => {
@@ -143,7 +128,6 @@ export default function ProfileScreen() {
         },
     });
 
-    // Set initial avatar when household data loads or changes
     useEffect(() => {
         if (currentHousehold?.currentUserMember?.avatar) {
             setSelectedAvatar(currentHousehold.currentUserMember.avatar);
@@ -160,17 +144,15 @@ export default function ProfileScreen() {
 
     const handleHouseholdChange = (householdId: string) => {
         console.log('Changing household to:', householdId);
-        setActiveHouseholdId(householdId); // Use global state
+        setActiveHouseholdId(householdId);
         setShowHouseholdSelection(false);
 
-        // Reset avatar selection when household changes
         const newHousehold = households.find(h => h.id === householdId);
         console.log('New household:', newHousehold);
         if (newHousehold?.currentUserMember?.avatar) {
             setSelectedAvatar(newHousehold.currentUserMember.avatar);
         }
 
-        // Invalidate queries to refresh data
         queryClient.invalidateQueries({ queryKey: ['available-avatars'] });
     };
 
@@ -180,7 +162,6 @@ export default function ProfileScreen() {
     };
 
     const handleSwitchHousehold = () => {
-        // Navigate to household page where user can create or join new household
         router.push('/household');
     };
 
@@ -248,10 +229,10 @@ export default function ProfileScreen() {
                     </Text>
                     <TextInput
                         style={[
-                            styles.textInput, 
-                            { 
-                                backgroundColor: colors.surface, 
-                                borderColor: colors.border, 
+                            styles.textInput,
+                            {
+                                backgroundColor: colors.surface,
+                                borderColor: colors.border,
                                 color: colors.text,
                                 opacity: updateNameMutation.isPending ? 0.7 : 1
                             }
@@ -300,7 +281,7 @@ export default function ProfileScreen() {
                         style={styles.actionButton}
                         onPress={handleSwitchHousehold}
                     >
-                                                                <Text style={[styles.actionButtonText, { color: colors.buttonPrimary }]}>Byt hushåll</Text>
+                        <Text style={[styles.actionButtonText, { color: colors.buttonPrimary }]}>Byt hushåll</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -346,7 +327,6 @@ export default function ProfileScreen() {
                 <View style={styles.bottomSpacing} />
             </ScrollView>
 
-            {/* Avatar Selection Modal */}
             {showAvatarSelection && (
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
@@ -402,7 +382,6 @@ export default function ProfileScreen() {
                 </View>
             )}
 
-            {/* Household Selection Modal */}
             {showHouseholdSelection && (
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>

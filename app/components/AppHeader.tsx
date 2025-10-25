@@ -1,7 +1,7 @@
-import { Appbar } from 'react-native-paper';
+import { useTheme } from '@/contexts/ThemeContext';
 import React from 'react';
 import { View } from 'react-native';
-import { useTheme } from '@/contexts/ThemeContext';
+import { Appbar } from 'react-native-paper';
 
 type AppHeaderAction = {
   icon: string;
@@ -18,9 +18,9 @@ type AppHeaderProps = {
 
 export function AppHeader({ title, titleContent, leftAction, rightActions = [] }: AppHeaderProps) {
   const { colors } = useTheme();
-  
+
   return (
-    <Appbar.Header 
+    <Appbar.Header
       mode="center-aligned"
       style={{ backgroundColor: colors.header, borderBottomColor: colors.border, borderBottomWidth: 1 }}
     >
@@ -32,7 +32,7 @@ export function AppHeader({ title, titleContent, leftAction, rightActions = [] }
           iconColor={colors.text}
         />
       ) : (
-        <Appbar.Action icon="menu" onPress={() => {}} iconColor={colors.text} />
+        <Appbar.Action icon="menu" onPress={() => { }} iconColor={colors.text} />
       )}
       {titleContent ? (
         <View style={{ flex: 1, alignItems: 'center' }}>{titleContent}</View>

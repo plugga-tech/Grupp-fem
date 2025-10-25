@@ -10,14 +10,14 @@ export type HouseholdSummary = {
   code?: string;
   avatar?: AvatarKey | null;
   membersCount?: number;
-  isActive?: boolean; // Add this to track active household
+  isActive?: boolean;
 };
 
 type Props = {
   households: HouseholdSummary[];
-  activeHouseholdId?: string | null; // Add this prop
+  activeHouseholdId?: string | null;
   onHouseholdPress: (household: HouseholdSummary) => void;
-  onSetActiveHousehold?: (household: HouseholdSummary) => void; // Add this prop
+  onSetActiveHousehold?: (household: HouseholdSummary) => void;
   onCreatePress: () => void;
   onJoinPress: () => void;
 };
@@ -53,7 +53,7 @@ export function HouseholdList({
 
           return (
             <Card style={[
-              styles.card, 
+              styles.card,
               { backgroundColor: colors.card, borderColor: colors.border },
               isActive && [styles.activeCard, { borderColor: '#4CAF50', backgroundColor: isDark ? '#0F2F0F' : '#E8F5E8' }]
             ]} mode="elevated">
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
-    minHeight: 80, // Add minimum height to accommodate text
+    minHeight: 80,
   },
   activeCard: {
     borderWidth: 2,

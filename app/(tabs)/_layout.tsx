@@ -1,6 +1,6 @@
+import { useTheme } from '@/contexts/ThemeContext';
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { useTheme } from '@/contexts/ThemeContext';
 
 export default function TabLayout() {
   const { colors, isDark } = useTheme();

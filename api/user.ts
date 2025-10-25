@@ -1,7 +1,7 @@
 import { AvatarKey } from '@/app/utils/avatar';
 import { db } from '@/firebase-config';
-import { collection, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 import { updateProfile, User } from 'firebase/auth';
+import { collection, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 
 export interface UserHousehold {
   id: string;
