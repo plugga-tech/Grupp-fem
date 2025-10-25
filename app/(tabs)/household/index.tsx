@@ -4,6 +4,7 @@ import JoinHouseholdModal from '@/app/(tabs)/household/components/JoinHouseholdM
 import { AppHeader } from '@/app/components/AppHeader';
 import { AvatarKey } from '@/app/utils/avatar';
 import { useActiveHousehold } from '@/contexts/ActiveHouseholdContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useHouseholdMutations } from '@/hooks/useHouseholdMutations';
 import { useQuery } from '@tanstack/react-query';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
@@ -18,6 +19,7 @@ export default function HouseholdScreen() {
   const userId = auth.currentUser?.uid ?? null;
   const { createHouseholdMutation, joinHouseholdMutation } = useHouseholdMutations(userId ?? '');
   const { activeHouseholdId, setActiveHouseholdId } = useActiveHousehold();
+  const { colors } = useTheme();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
@@ -73,7 +75,7 @@ export default function HouseholdScreen() {
   if (error) return <Text>Kunde inte hämta hushåll.</Text>;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <AppHeader
         title="Dina hushåll"

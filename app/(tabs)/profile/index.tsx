@@ -4,22 +4,40 @@ import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Button, IconButton } from 'react-native-paper';
 import { getAvailableAvatarsForHousehold, householdKeys, leaveHousehold, updateUserAvatar } from '../../../api/household';
-import { getUserHouseholds } from '../../../api/user';
+import { getUserHouseholds, updateUserDisplayName } from '../../../api/user';
 import { AvatarKey, getAvatarInfo } from '../../../app/utils/avatar';
 import { useActiveHousehold } from '../../../contexts/ActiveHouseholdContext';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useTheme, ThemeMode } from '../../../contexts/ThemeContext';
 
 export default function ProfileScreen() {
     const { user } = useAuth();
     const router = useRouter();
     const { activeHouseholdId, setActiveHouseholdId } = useActiveHousehold();
+    const { themeMode, setThemeMode, colors, isDark } = useTheme();
     const [name, setName] = useState(user?.displayName || '');
-    const [selectedTheme, setSelectedTheme] = useState<'Ljus' | 'Mörk' | 'Auto'>('Auto');
     const [selectedAvatar, setSelectedAvatar] = useState<AvatarKey | null>(null);
     const [showAvatarSelection, setShowAvatarSelection] = useState(false);
     const [showHouseholdSelection, setShowHouseholdSelection] = useState(false);
-    const [selectedHouseholdId, setSelectedHouseholdId] = useState<string | null>(null);
     const queryClient = useQueryClient();
+    
+    // Auto-save name changes after 2 seconds
+    useEffect(() => {
+        const initialName = user?.displayName || '';
+        const hasChanges = name !== initialName && name.trim() !== '' && name.trim() !== initialName;
+        
+        // Auto-save name after 2 seconds of no typing
+        if (hasChanges) {
+            const timeoutId = setTimeout(() => {
+                // Check if mutation is available and not pending before calling
+                if (updateNameMutation && !updateNameMutation.isPending) {
+                    updateNameMutation.mutate(name.trim());
+                }
+            }, 2000);
+            
+            return () => clearTimeout(timeoutId);
+        }
+    }, [name, user?.displayName]);
 
     // Get user's all households
     const { data: households = [] } = useQuery({
@@ -78,6 +96,32 @@ export default function ProfileScreen() {
         },
     });
 
+    // Update name mutation
+    const updateNameMutation = useMutation({
+        mutationFn: (newName: string) => {
+            if (!user) {
+                throw new Error('Ingen användare inloggad');
+            }
+            return updateUserDisplayName(user, newName);
+        },
+        onSuccess: () => {
+            console.log('Name updated successfully');
+            
+            // Invalidate user households data to refresh name
+            queryClient.invalidateQueries({ queryKey: ['user-households'] });
+            
+            if (user?.uid) {
+                queryClient.invalidateQueries({ queryKey: householdKeys.list(user.uid) });
+                queryClient.invalidateQueries({ queryKey: householdKeys.all });
+            }
+            
+            Alert.alert('Framgång', 'Namn uppdaterat!');
+        },
+        onError: (error) => {
+            Alert.alert('Fel', error instanceof Error ? error.message : 'Kunde inte uppdatera namn');
+        },
+    });
+
     // Leave household mutation
     const leaveHouseholdMutation = useMutation({
         mutationFn: (householdId: string) => leaveHousehold(user!.uid, householdId),
@@ -130,6 +174,11 @@ export default function ProfileScreen() {
         queryClient.invalidateQueries({ queryKey: ['available-avatars'] });
     };
 
+    const handleThemeChange = (theme: ThemeMode) => {
+        setThemeMode(theme);
+        Alert.alert('Tema Uppdaterat', `Tema ändrat till "${theme}"${theme === 'Auto' ? ' (följer system)' : ''}`);
+    };
+
     const handleSwitchHousehold = () => {
         // Navigate to household page where user can create or join new household
         router.push('/household');
@@ -166,16 +215,17 @@ export default function ProfileScreen() {
     const currentAvatarInfo = getAvatarInfo(currentAvatarKey);
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
 
-            <View style={styles.header}>
+            <View style={[styles.header, { backgroundColor: colors.header, borderBottomColor: colors.border }]}>
                 <IconButton
                     icon="arrow-left"
                     size={24}
-                    onPress={() => { }}
-                    style={styles.backButton}
+                    onPress={() => router.back()}
+                    style={[styles.backButton, { backgroundColor: colors.surface }]}
+                    iconColor={colors.text}
                 />
-                <Text style={styles.headerTitle}>Profil</Text>
+                <Text style={[styles.headerTitle, { color: colors.text }]}>Profil</Text>
                 <View style={styles.headerSpacer} />
             </View>
 
@@ -188,23 +238,41 @@ export default function ProfileScreen() {
                     <View style={[styles.avatarContainer, { backgroundColor: currentAvatarInfo.color }]}>
                         <Text style={styles.avatarEmoji}>{currentAvatarInfo.emoji}</Text>
                     </View>
-                    <Text style={styles.avatarName}>{currentHousehold?.currentUserMember?.name || name}</Text>
-                    <Text style={styles.changeAvatarText}>Tryck för att ändra avatar</Text>
+                    <Text style={[styles.avatarName, { color: colors.text }]}>{currentHousehold?.currentUserMember?.name || name}</Text>
+                    <Text style={[styles.changeAvatarText, { color: colors.textSecondary }]}>Tryck för att ändra avatar</Text>
                 </TouchableOpacity>
 
                 <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>Namn</Text>
+                    <Text style={[styles.sectionLabel, { color: colors.text }]}>
+                        Namn {updateNameMutation.isPending && '(sparar...)'}
+                    </Text>
                     <TextInput
-                        style={styles.textInput}
+                        style={[
+                            styles.textInput, 
+                            { 
+                                backgroundColor: colors.surface, 
+                                borderColor: colors.border, 
+                                color: colors.text,
+                                opacity: updateNameMutation.isPending ? 0.7 : 1
+                            }
+                        ]}
                         value={name}
                         onChangeText={setName}
                         placeholder="Ditt namn"
-                        placeholderTextColor="#C0C0C0"
+                        placeholderTextColor={colors.textSecondary}
+                        editable={!updateNameMutation.isPending}
                     />
                 </View>
 
                 <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>Aktivt Hushåll</Text>
+                    <View style={styles.sectionHeader}>
+                        <Text style={[styles.sectionLabel, { color: colors.text }]}>Mitt Hushåll</Text>
+                        {households.length > 1 && (
+                            <Text style={[styles.householdCount, { color: colors.textSecondary }]}>
+                                {households.length} hushåll
+                            </Text>
+                        )}
+                    </View>
 
                     {households.length === 0 ? (
                         <View style={styles.householdInfo}>
@@ -212,23 +280,19 @@ export default function ProfileScreen() {
                         </View>
                     ) : (
                         <>
-                            <TouchableOpacity
-                                style={styles.householdInfo}
-                                onPress={() => setShowHouseholdSelection(true)}
-                            >
-                                <Text style={styles.householdName}>
+                            <View style={[styles.householdInfo, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                                <Text style={[styles.householdName, { color: colors.text }]}>
                                     {currentHousehold?.name || 'Välj hushåll'}
                                 </Text>
-                                <Text style={styles.householdCode}>
+                                <Text style={[styles.householdCode, { color: colors.textSecondary }]}>
                                     Kod: {currentHousehold?.code || 'N/A'}
                                 </Text>
-                            </TouchableOpacity>
-
-                            {households.length > 1 && (
-                                <Text style={styles.householdHint}>
-                                    Tryck för att växla mellan {households.length} hushåll
-                                </Text>
-                            )}
+                                <View style={styles.householdStatus}>
+                                    <Text style={[styles.householdStatusText, { color: '#4CAF50' }]}>
+                                        ● Aktivt
+                                    </Text>
+                                </View>
+                            </View>
                         </>
                     )}
 
@@ -236,7 +300,7 @@ export default function ProfileScreen() {
                         style={styles.actionButton}
                         onPress={handleSwitchHousehold}
                     >
-                        <Text style={styles.actionButtonText}>Byt hushåll</Text>
+                                                                <Text style={[styles.actionButtonText, { color: colors.buttonPrimary }]}>Byt hushåll</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -254,7 +318,7 @@ export default function ProfileScreen() {
                 </View>
 
                 <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>Utseende</Text>
+                    <Text style={[styles.sectionLabel, { color: colors.text }]}>Utseende</Text>
 
                     <View style={styles.themeContainer}>
                         {(['Ljus', 'Mörk', 'Auto'] as const).map((theme) => (
@@ -262,33 +326,21 @@ export default function ProfileScreen() {
                                 key={theme}
                                 style={[
                                     styles.themeButton,
-                                    selectedTheme === theme && styles.themeButtonSelected
+                                    { backgroundColor: colors.surface, borderColor: colors.border },
+                                    themeMode === theme && [styles.themeButtonSelected, { borderColor: colors.primary }]
                                 ]}
-                                onPress={() => setSelectedTheme(theme)}
+                                onPress={() => handleThemeChange(theme)}
                             >
                                 <Text style={[
                                     styles.themeButtonText,
-                                    selectedTheme === theme && styles.themeButtonTextSelected
+                                    { color: colors.textSecondary },
+                                    themeMode === theme && [styles.themeButtonTextSelected, { color: colors.primary }]
                                 ]}>
                                     {theme}
                                 </Text>
                             </TouchableOpacity>
                         ))}
                     </View>
-                </View>
-
-                <View style={styles.saveSection}>
-                    <Button
-                        mode="contained"
-                        onPress={() => {
-                            // For now just show an alert - name updates can be implemented later
-                            Alert.alert('Information', 'Namnuppdatering kommer snart!');
-                        }}
-                        style={styles.saveButton}
-                        labelStyle={styles.saveButtonText}
-                    >
-                        Spara
-                    </Button>
                 </View>
 
                 <View style={styles.bottomSpacing} />
@@ -317,7 +369,7 @@ export default function ProfileScreen() {
                                             style={[
                                                 styles.avatarOption,
                                                 { backgroundColor: avatarInfo.color },
-                                                isSelected && styles.avatarOptionSelected
+                                                isSelected && [styles.avatarOptionSelected, { borderColor: colors.buttonPrimary }]
                                             ]}
                                             onPress={() => setSelectedAvatar(avatarKey)}
                                         >
@@ -339,7 +391,7 @@ export default function ProfileScreen() {
                             <Button
                                 mode="contained"
                                 onPress={handleSaveAvatar}
-                                style={styles.modalSaveButton}
+                                style={[styles.modalSaveButton, { backgroundColor: colors.buttonPrimary }]}
                                 loading={updateAvatarMutation.isPending}
                                 disabled={!selectedAvatar || updateAvatarMutation.isPending}
                             >
@@ -371,7 +423,13 @@ export default function ProfileScreen() {
                                         key={household.id}
                                         style={[
                                             styles.householdOption,
-                                            isSelected && styles.householdOptionSelected
+                                            isSelected && [
+                                                styles.householdOptionSelected,
+                                                {
+                                                    backgroundColor: isDark ? '#1A2B3D' : '#E3F2FD',
+                                                    borderColor: colors.buttonPrimary
+                                                }
+                                            ]
                                         ]}
                                         onPress={() => {
                                             handleHouseholdChange(household.id);
@@ -384,11 +442,11 @@ export default function ProfileScreen() {
                                             <Text style={styles.householdOptionName}>{household.name}</Text>
                                             <Text style={styles.householdOptionCode}>Kod: {household.code}</Text>
                                             {household.currentUserMember?.isAdmin && (
-                                                <Text style={styles.adminBadge}>Admin</Text>
+                                                <Text style={[styles.adminBadge, { color: colors.buttonSecondary }]}>Admin</Text>
                                             )}
                                         </View>
                                         {isSelected && (
-                                            <IconButton icon="check" size={20} iconColor="#007AFF" />
+                                            <IconButton icon="check" size={20} iconColor={colors.buttonPrimary} />
                                         )}
                                     </TouchableOpacity>
                                 );
@@ -416,9 +474,15 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFFF',
         borderBottomWidth: 1,
         borderBottomColor: '#E5E5E5',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
     },
     backButton: {
         margin: 0,
+        backgroundColor: '#F8F9FA',
     },
     headerTitle: {
         fontSize: 20,
@@ -451,21 +515,33 @@ const styles = StyleSheet.create({
     avatarName: {
         fontSize: 18,
         fontWeight: '500',
-        color: '#000000',
     },
     changeAvatarText: {
         fontSize: 14,
-        color: '#666666',
         marginTop: 4,
     },
     section: {
         marginBottom: 32,
     },
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
     sectionLabel: {
         fontSize: 18,
         fontWeight: '600',
         color: '#000000',
-        marginBottom: 12,
+    },
+    householdCount: {
+        fontSize: 12,
+        fontWeight: '500',
+        color: '#666666',
+        backgroundColor: '#F0F0F0',
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 10,
     },
     textInput: {
         backgroundColor: '#F8F9FA',
@@ -479,25 +555,32 @@ const styles = StyleSheet.create({
     },
     householdInfo: {
         backgroundColor: '#F8F9FA',
+        borderWidth: 1,
+        borderColor: '#E9ECEF',
         borderRadius: 8,
         paddingHorizontal: 16,
         paddingVertical: 12,
         marginBottom: 12,
+        position: 'relative',
     },
     householdName: {
         fontSize: 16,
         color: '#000000',
+        fontWeight: '500',
     },
     householdCode: {
         fontSize: 14,
         color: '#666666',
         marginTop: 2,
     },
-    householdHint: {
+    householdStatus: {
+        position: 'absolute',
+        top: 12,
+        right: 16,
+    },
+    householdStatusText: {
         fontSize: 12,
-        color: '#666666',
-        marginTop: 4,
-        fontStyle: 'italic',
+        fontWeight: '600',
     },
     actionButton: {
         backgroundColor: '#F8F9FA',
@@ -513,7 +596,6 @@ const styles = StyleSheet.create({
     },
     actionButtonText: {
         fontSize: 16,
-        color: '#007AFF',
         fontWeight: '500',
     },
     leaveButtonText: {
@@ -531,10 +613,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderWidth: 2,
         borderColor: 'transparent',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 1,
     },
     themeButtonSelected: {
         backgroundColor: '#E3F2FD',
         borderColor: '#2196F3',
+        shadowOpacity: 0.15,
+        elevation: 3,
     },
     themeButtonText: {
         fontSize: 16,
@@ -544,20 +633,6 @@ const styles = StyleSheet.create({
     themeButtonTextSelected: {
         color: '#2196F3',
         fontWeight: '600',
-    },
-    saveSection: {
-        marginTop: 24,
-        marginBottom: 16,
-    },
-    saveButton: {
-        backgroundColor: '#007AFF',
-        borderRadius: 8,
-        paddingVertical: 4,
-    },
-    saveButtonText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#FFFFFF',
     },
     bottomSpacing: {
         height: 40,
@@ -614,7 +689,6 @@ const styles = StyleSheet.create({
         borderColor: 'transparent',
     },
     avatarOptionSelected: {
-        borderColor: '#007AFF',
         borderWidth: 3,
     },
     avatarOptionEmoji: {
@@ -632,7 +706,6 @@ const styles = StyleSheet.create({
     },
     modalSaveButton: {
         flex: 1,
-        backgroundColor: '#007AFF',
     },
     // Household selection styles
     householdsList: {
@@ -651,8 +724,7 @@ const styles = StyleSheet.create({
         borderColor: 'transparent',
     },
     householdOptionSelected: {
-        backgroundColor: '#E3F2FD',
-        borderColor: '#007AFF',
+        borderWidth: 1,
     },
     householdAvatar: {
         width: 40,
@@ -680,7 +752,6 @@ const styles = StyleSheet.create({
     },
     adminBadge: {
         fontSize: 12,
-        color: '#007AFF',
         fontWeight: '500',
         marginTop: 2,
     },

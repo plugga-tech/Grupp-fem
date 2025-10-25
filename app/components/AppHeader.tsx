@@ -1,6 +1,7 @@
 import { Appbar } from 'react-native-paper';
 import React from 'react';
 import { View } from 'react-native';
+import { useTheme } from '@/contexts/ThemeContext';
 
 type AppHeaderAction = {
   icon: string;
@@ -16,21 +17,27 @@ type AppHeaderProps = {
 };
 
 export function AppHeader({ title, titleContent, leftAction, rightActions = [] }: AppHeaderProps) {
+  const { colors } = useTheme();
+  
   return (
-    <Appbar.Header mode="center-aligned">
+    <Appbar.Header 
+      mode="center-aligned"
+      style={{ backgroundColor: colors.header, borderBottomColor: colors.border, borderBottomWidth: 1 }}
+    >
       {leftAction ? (
         <Appbar.Action
           icon={leftAction.icon}
           onPress={leftAction.onPress}
           accessibilityLabel={leftAction.accessibilityLabel}
+          iconColor={colors.text}
         />
       ) : (
-        <Appbar.Action icon="menu" onPress={() => {}} />
+        <Appbar.Action icon="menu" onPress={() => {}} iconColor={colors.text} />
       )}
       {titleContent ? (
         <View style={{ flex: 1, alignItems: 'center' }}>{titleContent}</View>
       ) : (
-        <Appbar.Content title={title} />
+        <Appbar.Content title={title || ''} />
       )}
 
       {rightActions.map((action) => (
@@ -39,6 +46,7 @@ export function AppHeader({ title, titleContent, leftAction, rightActions = [] }
           icon={action.icon}
           onPress={action.onPress}
           accessibilityLabel={action.accessibilityLabel}
+          iconColor={colors.text}
         />
       ))}
     </Appbar.Header>

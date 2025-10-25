@@ -1,6 +1,7 @@
 import { AvatarKey } from '@/app/utils/avatar';
 import { db } from '@/firebase-config';
-import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore';
+import { updateProfile, User } from 'firebase/auth';
 
 export interface UserHousehold {
   id: string;
@@ -79,4 +80,40 @@ export async function getUserHouseholds(userId: string): Promise<UserHousehold[]
 export async function getUserHousehold(userId: string): Promise<UserHousehold | null> {
   const households = await getUserHouseholds(userId);
   return households.length > 0 ? households[0] : null;
+}
+
+/**
+ * Updates user's display name in Firebase Auth and all household memberships
+ * @param user - Firebase Auth user object
+ * @param newName - New display name
+ * @returns Promise<void>
+ */
+export async function updateUserDisplayName(user: User, newName: string): Promise<void> {
+  try {
+    // Update Firebase Auth profile
+    await updateProfile(user, {
+      displayName: newName.trim()
+    });
+
+    // Update name in all household memberships
+    const memberQuery = query(
+      collection(db, 'member'),
+      where('user_id', '==', user.uid)
+    );
+    const memberSnapshot = await getDocs(memberQuery);
+    
+    // Update each membership document
+    const updatePromises = memberSnapshot.docs.map(memberDoc => 
+      updateDoc(memberDoc.ref, {
+        name: newName.trim()
+      })
+    );
+    
+    await Promise.all(updatePromises);
+    
+    console.log('User display name updated successfully');
+  } catch (error) {
+    console.error('Error updating user display name:', error);
+    throw new Error('Failed to update display name');
+  }
 }
