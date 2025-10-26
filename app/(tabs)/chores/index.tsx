@@ -192,7 +192,29 @@ const styles = StyleSheet.create({
     color: '#000',
     flex: 1,
   },
-
+  avatarContainer: {
+    flexDirection: 'row',
+    gap: 4,
+    marginLeft: 12,
+  },
+  avatarCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#E8F5E9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#6AC08B',
+  },
+  avatarEmoji: {
+    fontSize: 20,
+  },
+  avatarMore: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6AC08B',
+  },
   dayBadge: {
     minWidth: 36,
     height: 36,
