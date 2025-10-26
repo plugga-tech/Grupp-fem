@@ -81,7 +81,7 @@ export default function HouseholdScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <AppHeader
         title="Dina hushåll"
-        rightActions={[{ icon: 'account', onPress: () => {} }]}
+        rightActions={[{ icon: 'account', onPress: () => router.push('/(tabs)/profile') }]}
         leftAction={{ icon: 'chevron-left', onPress: () => router.back() }}
       />
 
