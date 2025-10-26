@@ -311,3 +311,34 @@ export async function leaveHousehold(userId: string, householdId: string): Promi
   batch.delete(memberDoc.ref);
   await batch.commit();
 }
+
+export async function removeMember(
+  actingUserId: string,
+  householdId: string,
+  memberUserId: string,
+): Promise<void> {
+  if (actingUserId === memberUserId) {
+    await leaveHousehold(memberUserId, householdId);
+    return;
+  }
+
+  const actingSnap = await getDocs(
+    query(
+      collection(db, 'member'),
+      where('user_id', '==', actingUserId),
+      where('household_id', '==', householdId),
+    ),
+  );
+
+  const targetSnap = await getDocs(
+    query(
+      collection(db, 'member'),
+      where('user_id', '==', memberUserId),
+      where('household_id', '==', householdId),
+    ),
+  );
+
+  const batch = writeBatch(db);
+  batch.delete(targetSnap.docs[0].ref);
+  await batch.commit();
+}
