@@ -1,13 +1,13 @@
-import { getHouseholdMembers, householdKeys, updateHouseholdName } from '@/api/household';
-import { AppHeader } from '@/app/components/AppHeader';
-import { AVATAR_COLORS, AVATAR_EMOJI, AvatarKey } from '@/app/utils/avatar';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getHouseholdMembers, householdKeys } from '@/api/household';
+import AppHeader from '@/components/AppHeader';
+import { useHouseholdMutations } from '@/hooks/useHouseholdMutations';
+import { AVATAR_COLORS, AVATAR_EMOJI, AvatarKey } from '@/utils/avatar';
+import { useQuery } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { getAuth } from 'firebase/auth';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Badge, Card, TextInput } from 'react-native-paper';
-import { useHouseholdMutations } from '@/hooks/useHouseholdMutations';
 
 const getAvatarEmoji = (key?: AvatarKey | null) => (key ? AVATAR_EMOJI[key] : '');
 const getAvatarColor = (key?: AvatarKey | null) => (key ? AVATAR_COLORS[key] : 'transparent');

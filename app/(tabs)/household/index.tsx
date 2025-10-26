@@ -1,17 +1,17 @@
 import { getHouseholds, householdKeys } from '@/api/household';
-import CreateHouseholdModal from '@/app/(tabs)/household/components/CreateHouseholdModal';
-import JoinHouseholdModal from '@/app/(tabs)/household/components/JoinHouseholdModal';
-import { AppHeader } from '@/app/components/AppHeader';
-import { AvatarKey } from '@/app/utils/avatar';
+import AppHeader from '@/components/AppHeader';
+import CreateHouseholdModal from '@/components/CreateHouseholdModal';
+import JoinHouseholdModal from '@/components/JoinHouseholdModal';
 import { useActiveHousehold } from '@/contexts/ActiveHouseholdContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useHouseholdMutations } from '@/hooks/useHouseholdMutations';
+import { AvatarKey } from '@/utils/avatar';
 import { useQuery } from '@tanstack/react-query';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { getAuth } from 'firebase/auth';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
-import { HouseholdList } from './components/HouseholdList';
+import { HouseholdList } from '../../../components/HouseholdList';
 
 export default function HouseholdScreen() {
   const router = useRouter();
@@ -32,7 +32,11 @@ export default function HouseholdScreen() {
     membersCount?: number;
   };
 
-  const { data: household = [], error, refetch } = useQuery<Household[]>({
+  const {
+    data: household = [],
+    error,
+    refetch,
+  } = useQuery<Household[]>({
     queryKey: householdKeys.list(userId || ''),
     enabled: !!userId,
     queryFn: () => getHouseholds(userId!),
@@ -50,9 +54,8 @@ export default function HouseholdScreen() {
   // Refresh data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      console.log('Household screen focused, refetching data...');
       refetch();
-    }, [refetch])
+    }, [refetch]),
   );
 
   const handleSetActiveHousehold = (selectedHousehold: any) => {
@@ -64,11 +67,10 @@ export default function HouseholdScreen() {
         {
           text: 'OK',
           onPress: () => {
-            // Navigate back to profile to show the change
             router.push('/profile');
-          }
-        }
-      ]
+          },
+        },
+      ],
     );
   };
 
@@ -79,7 +81,7 @@ export default function HouseholdScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <AppHeader
         title="Dina hushåll"
-        rightActions={[{ icon: 'account', onPress: () => { } }]}
+        rightActions={[{ icon: 'account', onPress: () => {} }]}
         leftAction={{ icon: 'chevron-left', onPress: () => router.back() }}
       />
 

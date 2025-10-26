@@ -1,5 +1,5 @@
-import { AvatarKey } from '@/app/utils/avatar';
 import { db } from '@/firebase-config';
+import { AvatarKey } from '@/utils/avatar';
 import { updateProfile, User } from 'firebase/auth';
 import { collection, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 
@@ -24,28 +24,25 @@ export interface UserHousehold {
 export async function getUserHouseholds(userId: string): Promise<UserHousehold[]> {
   try {
     // Find all user's memberships
-    const memberQuery = query(
-      collection(db, 'member'),
-      where('user_id', '==', userId)
-    );
+    const memberQuery = query(collection(db, 'member'), where('user_id', '==', userId));
     const memberSnapshot = await getDocs(memberQuery);
-    
+
     if (memberSnapshot.empty) {
       return [];
     }
 
     const households: UserHousehold[] = [];
-    
+
     for (const memberDoc of memberSnapshot.docs) {
       const memberData = memberDoc.data();
-      
+
       // Get household data
       const householdRef = doc(db, 'household', memberData.household_id);
       const householdDoc = await getDoc(householdRef);
-      
+
       if (householdDoc.exists()) {
         const householdData = householdDoc.data();
-        
+
         households.push({
           id: householdDoc.id,
           name: householdData.name,
@@ -60,7 +57,7 @@ export async function getUserHouseholds(userId: string): Promise<UserHousehold[]
         });
       }
     }
-    
+
     // Sort by creation date (newest first)
     return households.sort((a, b) => {
       // If we don't have creation dates, just return as is
@@ -92,25 +89,22 @@ export async function updateUserDisplayName(user: User, newName: string): Promis
   try {
     // Update Firebase Auth profile
     await updateProfile(user, {
-      displayName: newName.trim()
+      displayName: newName.trim(),
     });
 
     // Update name in all household memberships
-    const memberQuery = query(
-      collection(db, 'member'),
-      where('user_id', '==', user.uid)
-    );
+    const memberQuery = query(collection(db, 'member'), where('user_id', '==', user.uid));
     const memberSnapshot = await getDocs(memberQuery);
-    
+
     // Update each membership document
-    const updatePromises = memberSnapshot.docs.map(memberDoc => 
+    const updatePromises = memberSnapshot.docs.map((memberDoc) =>
       updateDoc(memberDoc.ref, {
-        name: newName.trim()
-      })
+        name: newName.trim(),
+      }),
     );
-    
+
     await Promise.all(updatePromises);
-    
+
     console.log('User display name updated successfully');
   } catch (error) {
     console.error('Error updating user display name:', error);

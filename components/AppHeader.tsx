@@ -16,13 +16,22 @@ type AppHeaderProps = {
   rightActions?: AppHeaderAction[];
 };
 
-export function AppHeader({ title, titleContent, leftAction, rightActions = [] }: AppHeaderProps) {
+export default function AppHeader({
+  title,
+  titleContent,
+  leftAction,
+  rightActions = [],
+}: AppHeaderProps) {
   const { colors } = useTheme();
 
   return (
     <Appbar.Header
       mode="center-aligned"
-      style={{ backgroundColor: colors.header, borderBottomColor: colors.border, borderBottomWidth: 1 }}
+      style={{
+        backgroundColor: colors.header,
+        borderBottomColor: colors.border,
+        borderBottomWidth: 1,
+      }}
     >
       {leftAction ? (
         <Appbar.Action
@@ -32,7 +41,7 @@ export function AppHeader({ title, titleContent, leftAction, rightActions = [] }
           iconColor={colors.text}
         />
       ) : (
-        <Appbar.Action icon="menu" onPress={() => { }} iconColor={colors.text} />
+        <Appbar.Action icon="menu" onPress={() => {}} iconColor={colors.text} />
       )}
       {titleContent ? (
         <View style={{ flex: 1, alignItems: 'center' }}>{titleContent}</View>
