@@ -27,6 +27,15 @@ export default function ChoreScreen() {
     enabled: !!currentHousehold?.id,
   });
 
+  const getAvatarEmoji = (userId: string) => {
+
+    if (userId === currentUser?.id) { //admin avatar
+      return '🦁'; 
+    }
+    // Andra användare får en annan avatar just nu 
+    return '👤';
+  };
+
   if (isLoading) {
     return (
       <View style={[styles.container, styles.center]}>
@@ -77,26 +86,49 @@ export default function ChoreScreen() {
         </View>
       ) : (
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
-          {chores.map((chore) => (
-            <Card
-              key={chore.id}
-              style={styles.card}
-              onPress={() => router.push(`/chores/details/${chore.id}`)}
-            >
-              <Card.Content style={styles.cardContent}>
-                <Text style={styles.choreName}>{chore.name}</Text>
+          {chores.map((chore) => {
+            const hasAvatars = chore.completed_by_avatars && chore.completed_by_avatars.length > 0;
+            
+            return (
+              <Card
+                key={chore.id}
+                style={styles.card}
+                onPress={() => router.push(`/chores/details/${chore.id}`)}
+              >
+                <Card.Content style={styles.cardContent}>
+                  <Text style={styles.choreName}>{chore.name}</Text>
 
-                <View
-                  style={[
-                    styles.dayBadge,
-                    chore.is_overdue ? styles.dayBadgeOverdue : styles.dayBadgeNormal,
-                  ]}
-                >
-                  <Text style={styles.dayNumber}>{chore.days_since_last}</Text>
-                </View>
-              </Card.Content>
-            </Card>
-          ))}
+                  {hasAvatars ? (
+          
+                    <View style={styles.avatarContainer}>
+                      {chore.completed_by_avatars!.slice(0, 3).map((userId, index) => (
+                        <View key={index} style={styles.avatarCircle}>
+                          <Text style={styles.avatarEmoji}>
+                            {getAvatarEmoji(userId)}
+                          </Text>
+                        </View>
+                      ))}
+                      {chore.completed_by_avatars!.length > 3 && (
+                        <View style={styles.avatarCircle}>
+                          <Text style={styles.avatarMore}>+{chore.completed_by_avatars!.length - 3}</Text>
+                        </View>
+                      )}
+                    </View>
+                  ) : (
+                    // Visa dagssiffra
+                    <View
+                      style={[
+                        styles.dayBadge,
+                        chore.is_overdue ? styles.dayBadgeOverdue : styles.dayBadgeNormal,
+                      ]}
+                    >
+                      <Text style={styles.dayNumber}>{chore.days_since_last}</Text>
+                    </View>
+                  )}
+                </Card.Content>
+              </Card>
+            );
+          })}
         </ScrollView>
       )}
     </View>
@@ -160,6 +192,29 @@ const styles = StyleSheet.create({
     color: '#000',
     flex: 1,
   },
+  avatarContainer: {
+    flexDirection: 'row',
+    gap: 4,
+    marginLeft: 12,
+  },
+  avatarCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#E8F5E9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#6AC08B',
+  },
+  avatarEmoji: {
+    fontSize: 20,
+  },
+  avatarMore: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6AC08B',
+  },
   dayBadge: {
     minWidth: 36,
     height: 36,
@@ -170,10 +225,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   dayBadgeNormal: {
-    backgroundColor: '#6AC08B',
+    backgroundColor: '#D3D3D3', 
   },
   dayBadgeOverdue: {
-    backgroundColor: '#CD5D6F',
+    backgroundColor: '#CD5D6F', 
   },
   dayNumber: {
     fontSize: 16,

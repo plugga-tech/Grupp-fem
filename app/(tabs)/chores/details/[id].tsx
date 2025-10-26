@@ -14,6 +14,7 @@ export default function ChoreDetailsScreen() {
   const [currentHousehold] = useAtom(currentHouseholdAtom);
   const [currentUser] = useAtom(currentUserAtom);
   const [showDeleteToast, setShowDeleteToast] = useState(false);
+  const [showCompleteToast, setShowCompleteToast] = useState(false);
 
   const { data: chores, isLoading } = useQuery({
     queryKey: ['chores', currentHousehold?.id],
@@ -23,11 +24,6 @@ export default function ChoreDetailsScreen() {
 
   const chore = chores?.find((c) => c.id === id);
 
-  // Kolla om användaren har gjort sysslan idag
-  const isCompletedToday = chore?.last_completed_at 
-    ? Math.floor((Date.now() - chore.last_completed_at.getTime()) / (1000 * 60 * 60 * 24)) === 0
-    : false;
-
   const completeMutation = useMutation({
     mutationFn: () => completeChore(
       id as string,
@@ -36,8 +32,9 @@ export default function ChoreDetailsScreen() {
     ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chores'] });
+      setShowCompleteToast(true);
       setTimeout(() => {
-        router.push('/chores');
+        setShowCompleteToast(false);
       }, 2000);
     },
     onError: (error) => {
@@ -88,24 +85,13 @@ export default function ChoreDetailsScreen() {
         />
         <Text style={styles.headerTitle}>Sysslans information</Text>
         
-        {isCompletedToday ? (
-          <IconButton 
-            icon="delete-outline"
-            size={24}
-            onPress={() => deleteMutation.mutate()}
-            style={{ margin: 0 }}
-            iconColor="#CD5D6F"
-            disabled={deleteMutation.isPending}
-          />
-        ) : (
-          <IconButton 
-            icon="lead-pencil"
-            size={24}
-            onPress={() => router.push(`/chores/edit/${chore.id}`)}
-            style={{ margin: 0 }}
-            iconColor="#4A90E2"
-          />
-        )}
+        <IconButton 
+          icon="lead-pencil"
+          size={24}
+          onPress={() => router.push(`/chores/edit/${chore.id}`)}
+          style={{ margin: 0 }}
+          iconColor="#4A90E2"
+        />
       </View>
 
       <ScrollView style={styles.content}>
@@ -143,23 +129,24 @@ export default function ChoreDetailsScreen() {
         </View>
       </ScrollView>
 
-      {isCompletedToday ? (
-        <View style={styles.completedContainer}>
-          <Text style={styles.completedText}>✅ Sysslan är markerad som gjord!</Text>
-        </View>
-      ) : (
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.completeButton}
-            onPress={() => completeMutation.mutate()}
-            disabled={completeMutation.isPending}
-          >
-            <Text style={styles.completeButtonText}>
-              {completeMutation.isPending ? 'Markerar...' : 'Markera som gjord ✓'}
-            </Text>
-          </TouchableOpacity>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={styles.completeButton}
+          onPress={() => completeMutation.mutate()}
+          disabled={completeMutation.isPending}
+        >
+          <Text style={styles.completeButtonText}>
+            {completeMutation.isPending ? 'Markerar...' : 'Markera som gjord ✓'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {showCompleteToast && (
+        <View style={styles.completeToast}>
+          <Text style={styles.completeToastText}>✅ Sysslan är markerad som gjord!</Text>
         </View>
       )}
+
 
       {showDeleteToast && (
         <View style={styles.deleteToast}>
@@ -272,17 +259,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
-  completedContainer: {
-    backgroundColor: '#E8F5E9',
-    padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  completedText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2E7D32',
-  },
   buttonContainer: {
     padding: 16,
     backgroundColor: '#F5F5F5',
@@ -303,6 +279,28 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  completeToast: {
+    position: 'absolute',
+    bottom: 80,
+    left: 20,
+    right: 20,
+    backgroundColor: '#E8F5E9',
+    padding: 16,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  completeToastText: {
+    fontSize: 16,
+    color: '#2E7D32',
+    fontWeight: '600',
   },
   deleteToast: {
     position: 'absolute',
@@ -325,15 +323,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#C62828',
     fontWeight: '600',
-  },
-  errorText: {
-    fontSize: 18,
-    color: '#CD5D6F',
-    marginBottom: 16,
-  },
-  backLink: {
-    fontSize: 16,
-    color: '#4A90E2',
-    textDecorationLine: 'underline',
   },
 });
