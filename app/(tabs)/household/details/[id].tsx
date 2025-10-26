@@ -16,6 +16,8 @@ export default function HouseholdInfoScreen() {
   const router = useRouter();
   const { id, name, code } = useLocalSearchParams<{ id: string; name: string; code: string }>();
 
+  // TODO lägga till darkmode auto
+
   const {
     data: members = [],
     isLoading,
