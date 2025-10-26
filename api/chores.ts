@@ -11,6 +11,7 @@ export interface Chore {
   created_at: Date;
   updated_at: Date;
 }
+
 export interface ChoreCompletion {
   id: string;
   chore_id: string;
@@ -18,11 +19,12 @@ export interface ChoreCompletion {
   done_by_user_id: string;
   done_at: Date;
 }
+
 export interface ChoreWithStatus extends Chore {
   days_since_last: number;
   is_overdue: boolean;
   last_completed_at?: Date;
-  last_completed_by?: string;
+  completed_by_avatars?: string[]; 
 }
 
 export type ChoreCreate = Omit<Chore, 'id' | 'created_at' | 'updated_at'>;
@@ -49,7 +51,6 @@ export async function getChores(householdId: string): Promise<Chore[]> {
       updated_at: docSnap.data().updated_at?.toDate(),
     })) as Chore[];
    
-    // Sortera efter created_at
     chores.sort((a, b) => a.created_at.getTime() - b.created_at.getTime());
    
     return chores;
@@ -84,16 +85,15 @@ export async function getChoresWithStatus(householdId: string): Promise<ChoreWit
       });
     });
    
-    // Beräkna status för varje syssla
+   
     const choresWithStatus: ChoreWithStatus[] = chores.map((chore) => {
       const choreCompletions = completionsByChore[chore.id] || [];
      
       let lastCompletedAt: Date | undefined = undefined;
-      let lastCompletedBy: string | undefined = undefined;
+      let completedByAvatars: string[] = [];
       let daysSinceLast: number;
      
       if (choreCompletions.length > 0) {
-        // Sortera för att hitta senaste
         choreCompletions.sort((a, b) => {
           const dateA = a.done_at ? a.done_at.getTime() : 0;
           const dateB = b.done_at ? b.done_at.getTime() : 0;
@@ -103,15 +103,27 @@ export async function getChoresWithStatus(householdId: string): Promise<ChoreWit
         const lastCompletion = choreCompletions[0];
         if (lastCompletion?.done_at) {
           lastCompletedAt = lastCompletion.done_at;
-          lastCompletedBy = lastCompletion.done_by_user_id;
-          daysSinceLast = Math.floor((Date.now() - lastCompletion.done_at.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+          
+          // Hämta alla user IDs som gjort sysslan idag
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          
+          completedByAvatars = choreCompletions
+            .filter(c => {
+              if (!c.done_at) return false;
+              const completionDate = new Date(c.done_at);
+              completionDate.setHours(0, 0, 0, 0);
+              return completionDate.getTime() === today.getTime();
+            })
+            .map(c => c.done_by_user_id);
+          
+          daysSinceLast = Math.floor((Date.now() - lastCompletion.done_at.getTime()) / (1000 * 60 * 60 * 24));
         } else {
-          // Om done_at saknas, använd created_at
-          daysSinceLast = Math.floor((Date.now() - chore.created_at.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+          daysSinceLast = Math.floor((Date.now() - chore.created_at.getTime()) / (1000 * 60 * 60 * 24));
         }
       } else {
-        // Om ingen completion finns, räkna från created_at, börja från dag 1
-        daysSinceLast = Math.floor((Date.now() - chore.created_at.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+        daysSinceLast = Math.floor((Date.now() - chore.created_at.getTime()) / (1000 * 60 * 60 * 24));
       }
    
       const isOverdue = daysSinceLast > chore.frequency;
@@ -121,7 +133,7 @@ export async function getChoresWithStatus(householdId: string): Promise<ChoreWit
         days_since_last: daysSinceLast,
         is_overdue: isOverdue,
         last_completed_at: lastCompletedAt,
-        last_completed_by: lastCompletedBy,
+        completed_by_avatars: completedByAvatars,
       };
     });
    
@@ -153,7 +165,6 @@ export async function createChore(chore: ChoreCreate): Promise<Chore> {
   }
 }
 
-
 export async function updateChore(id: string, updates: ChoreUpdate): Promise<void> {
   try {
     const choreRef = doc(db, 'chores', id);
@@ -166,7 +177,6 @@ export async function updateChore(id: string, updates: ChoreUpdate): Promise<voi
     throw new Error('Failed to update chore', { cause: error });
   }
 }
-
 
 export async function deleteChore(id: string): Promise<void> {
   try {
