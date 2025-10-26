@@ -46,7 +46,7 @@ export default function AppHeader({
       {titleContent ? (
         <View style={{ flex: 1, alignItems: 'center' }}>{titleContent}</View>
       ) : (
-        <Appbar.Content title={title || ''} />
+        <Appbar.Content title={title || ''} color={colors.text} />
       )}
 
       {rightActions.map((action) => (
