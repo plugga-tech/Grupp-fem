@@ -1,8 +1,9 @@
-import { AVATAR_COLORS, AVATAR_EMOJI, AvatarKey } from '@/app/utils/avatar';
 import { useTheme } from '@/contexts/ThemeContext';
+import { AVATAR_COLORS, AVATAR_EMOJI, AvatarKey } from '@/utils/avatar';
 import React from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
-import { Badge, Button, Card, IconButton } from 'react-native-paper';
+import { Badge, Card, Button, IconButton } from 'react-native-paper';
+import ActionButton from './ActionButton';
 
 export type HouseholdSummary = {
   id: string;
@@ -31,7 +32,7 @@ export function HouseholdList({
   onHouseholdPress,
   onSetActiveHousehold,
   onCreatePress,
-  onJoinPress
+  onJoinPress,
 }: Props) {
   const { colors, isDark } = useTheme();
 
@@ -52,11 +53,17 @@ export function HouseholdList({
           const isActive = item.id === activeHouseholdId;
 
           return (
-            <Card style={[
-              styles.card,
-              { backgroundColor: colors.card, borderColor: colors.border },
-              isActive && [styles.activeCard, { borderColor: '#4CAF50', backgroundColor: isDark ? '#0F2F0F' : '#E8F5E8' }]
-            ]} mode="elevated">
+            <Card
+              style={[
+                styles.card,
+                { backgroundColor: colors.card, borderColor: colors.border },
+                isActive && [
+                  styles.activeCard,
+                  { borderColor: '#4CAF50', backgroundColor: isDark ? '#0F2F0F' : '#E8F5E8' },
+                ],
+              ]}
+              mode="elevated"
+            >
               <View style={styles.cardContent}>
                 <IconButton
                   icon="information-outline"
@@ -70,8 +77,11 @@ export function HouseholdList({
                   <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={1}>
                     {item.name}
                   </Text>
-                  <Text style={[styles.cardDescription, { color: colors.textSecondary }]} numberOfLines={1}>
-                    {isActive ? "Aktivt hushåll" : `Kod: ${item.code}`}
+                  <Text
+                    style={[styles.cardDescription, { color: colors.textSecondary }]}
+                    numberOfLines={1}
+                  >
+                    {isActive ? 'Aktivt hushåll' : `Kod: ${item.code}`}
                   </Text>
                 </View>
 
@@ -110,14 +120,31 @@ export function HouseholdList({
             </Card>
           );
         }}
-        ListEmptyComponent={<Text style={[styles.emptyText, { color: colors.textSecondary }]}>Inga hushåll ännu.</Text>}
+        ListEmptyComponent={
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+            Inga hushåll ännu.
+          </Text>
+        }
       />
 
       <View style={styles.bottomBar}>
-        <Button mode="contained" icon="plus" style={styles.barBtn} onPress={onCreatePress}>
-          Skapa
-        </Button>
-        <Button onPress={onJoinPress}>Gå med</Button>
+        <ActionButton
+          label="Skapa"
+          icon="plus-circle-outline"
+          onPress={onCreatePress}
+          backgroundColor="#111827"
+          textColor="#fff"
+          style={styles.barBtn}
+        />
+
+        <ActionButton
+          label="Gå med"
+          icon="account-plus-outline"
+          onPress={onJoinPress}
+          backgroundColor="#111827"
+          textColor="#fff"
+          style={styles.barBtn}
+        />
       </View>
     </>
   );

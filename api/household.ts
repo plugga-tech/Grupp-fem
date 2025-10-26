@@ -1,5 +1,5 @@
-import { AVATAR_KEYS, AvatarKey, giveRandomAvatar } from '@/app/utils/avatar';
 import { db } from '@/firebase-config';
+import { AVATAR_KEYS, AvatarKey, giveRandomAvatar } from '@/utils/avatar';
 import {
   addDoc,
   collection,
@@ -94,23 +94,20 @@ function generateCode(length = 8) {
 export async function getAvailableAvatarsForHousehold(householdId: string): Promise<AvatarKey[]> {
   try {
     // Hämta alla medlemmar i hushållet
-    const membersQuery = query(
-      collection(db, 'member'),
-      where('household_id', '==', householdId)
-    );
+    const membersQuery = query(collection(db, 'member'), where('household_id', '==', householdId));
     const membersSnap = await getDocs(membersQuery);
-    
+
     // Samla använda avatarer
     const usedAvatars = new Set<AvatarKey>();
-    membersSnap.docs.forEach(doc => {
+    membersSnap.docs.forEach((doc) => {
       const avatar = doc.data().avatar as AvatarKey;
       if (avatar) {
         usedAvatars.add(avatar);
       }
     });
-    
+
     // Returnera tillgängliga avatarer
-    return AVATAR_KEYS.filter(avatar => !usedAvatars.has(avatar));
+    return AVATAR_KEYS.filter((avatar) => !usedAvatars.has(avatar));
   } catch (error) {
     console.error('Error getting available avatars:', error);
     throw new Error('Failed to get available avatars');
@@ -122,13 +119,13 @@ export async function getAvailableAvatarsForHousehold(householdId: string): Prom
  */
 export async function assignUniqueAvatar(householdId: string): Promise<AvatarKey> {
   const availableAvatars = await getAvailableAvatarsForHousehold(householdId);
-  
+
   if (availableAvatars.length === 0) {
     // Om inga avatarer finns kvar, använd en fallback
     console.warn('No available avatars for household:', householdId);
     return giveRandomAvatar(); // Fallback till random
   }
-  
+
   // Välj en slumpmässig från tillgängliga
   const randomIndex = Math.floor(Math.random() * availableAvatars.length);
   return availableAvatars[randomIndex];
@@ -150,13 +147,13 @@ export async function createHousehold({ name, ownerId }: CreateHouseholdInput) {
   });
 
   const avatar = await assignUniqueAvatar(householdRef.id);
-  
+
   console.log('Creating household:', {
     householdId: householdRef.id,
     name,
     code,
     ownerId,
-    avatar
+    avatar,
   });
 
   batch.set(memberRef, {
@@ -168,7 +165,7 @@ export async function createHousehold({ name, ownerId }: CreateHouseholdInput) {
   });
 
   await batch.commit();
-  
+
   console.log('Household created successfully:', householdRef.id);
 
   return { id: householdRef.id, name, code };
@@ -236,24 +233,28 @@ export async function getHouseholdMembers(householdId: string): Promise<Househol
  * @param newAvatarKey - New avatar key to assign
  * @returns Promise<void>
  */
-export async function updateUserAvatar(userId: string, householdId: string, newAvatarKey: string): Promise<void> {
+export async function updateUserAvatar(
+  userId: string,
+  householdId: string,
+  newAvatarKey: string,
+): Promise<void> {
   // Find user's membership in the specific household
   const memberQuery = query(
     collection(db, 'member'),
     where('user_id', '==', userId),
-    where('household_id', '==', householdId)
+    where('household_id', '==', householdId),
   );
   const memberSnapshot = await getDocs(memberQuery);
-  
+
   if (memberSnapshot.empty) {
     throw new Error('Medlemskap hittades inte i detta hushåll');
   }
 
   const memberDoc = memberSnapshot.docs[0];
-  
+
   // Check if avatar is available in household
   const availableAvatars = await getAvailableAvatarsForHousehold(householdId);
-  
+
   if (!availableAvatars.includes(newAvatarKey as AvatarKey)) {
     throw new Error('Avatar är inte tillgänglig i detta hushåll');
   }
@@ -275,25 +276,27 @@ export async function leaveHousehold(userId: string, householdId: string): Promi
   const memberQuery = query(
     collection(db, 'member'),
     where('user_id', '==', userId),
-    where('household_id', '==', householdId)
+    where('household_id', '==', householdId),
   );
   const memberSnapshot = await getDocs(memberQuery);
-  
+
   if (memberSnapshot.empty) {
     throw new Error('Du är inte medlem i detta hushåll');
   }
 
   const memberDoc = memberSnapshot.docs[0];
   const memberData = memberDoc.data();
-  
+
   // Check if user is the owner
   const householdRef = doc(db, 'household', householdId);
   const householdDoc = await getDoc(householdRef);
-  
+
   if (householdDoc.exists()) {
     const householdData = householdDoc.data();
     if (householdData.owner_id === userId) {
-      throw new Error('Du kan inte lämna hushållet eftersom du är ägare. Överför ägarskap först eller ta bort hushållet.');
+      throw new Error(
+        'Du kan inte lämna hushållet eftersom du är ägare. Överför ägarskap först eller ta bort hushållet.',
+      );
     }
   }
 
@@ -302,9 +305,40 @@ export async function leaveHousehold(userId: string, householdId: string): Promi
     // Instead of deleting, we could mark as inactive
     // For now, let's just delete the document
   });
-  
+
   // Actually delete the membership document
   const batch = writeBatch(db);
   batch.delete(memberDoc.ref);
+  await batch.commit();
+}
+
+export async function removeMember(
+  actingUserId: string,
+  householdId: string,
+  memberUserId: string,
+): Promise<void> {
+  if (actingUserId === memberUserId) {
+    await leaveHousehold(memberUserId, householdId);
+    return;
+  }
+
+  const actingSnap = await getDocs(
+    query(
+      collection(db, 'member'),
+      where('user_id', '==', actingUserId),
+      where('household_id', '==', householdId),
+    ),
+  );
+
+  const targetSnap = await getDocs(
+    query(
+      collection(db, 'member'),
+      where('user_id', '==', memberUserId),
+      where('household_id', '==', householdId),
+    ),
+  );
+
+  const batch = writeBatch(db);
+  batch.delete(targetSnap.docs[0].ref);
   await batch.commit();
 }

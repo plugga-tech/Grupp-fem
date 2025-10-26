@@ -1,13 +1,15 @@
-import { getHouseholdMembers, householdKeys, updateHouseholdName } from '@/api/household';
-import { AppHeader } from '@/app/components/AppHeader';
-import { AVATAR_COLORS, AVATAR_EMOJI, AvatarKey } from '@/app/utils/avatar';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getHouseholdMembers, householdKeys } from '@/api/household';
+import ActionButton from '@/components/ActionButton';
+import AppHeader from '@/components/AppHeader';
+import { useActiveHousehold } from '@/contexts/ActiveHouseholdContext';
+import { useHouseholdMutations } from '@/hooks/useHouseholdMutations';
+import { AVATAR_COLORS, AVATAR_EMOJI, AvatarKey } from '@/utils/avatar';
+import { useQuery } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { getAuth } from 'firebase/auth';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Badge, Card, TextInput } from 'react-native-paper';
-import { useHouseholdMutations } from '@/hooks/useHouseholdMutations';
+import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Badge, Card, IconButton, TextInput } from 'react-native-paper';
 
 const getAvatarEmoji = (key?: AvatarKey | null) => (key ? AVATAR_EMOJI[key] : '');
 const getAvatarColor = (key?: AvatarKey | null) => (key ? AVATAR_COLORS[key] : 'transparent');
@@ -15,6 +17,8 @@ const getAvatarColor = (key?: AvatarKey | null) => (key ? AVATAR_COLORS[key] : '
 export default function HouseholdInfoScreen() {
   const router = useRouter();
   const { id, name, code } = useLocalSearchParams<{ id: string; name: string; code: string }>();
+
+  // TODO lägga till darkmode auto
 
   const {
     data: members = [],
@@ -28,23 +32,47 @@ export default function HouseholdInfoScreen() {
 
   const userId = getAuth().currentUser?.uid;
 
-  const { renameHouseholdMutation } = useHouseholdMutations(userId ?? '');
+  const { removeMemberMutation, renameHouseholdMutation } = useHouseholdMutations(userId ?? '');
+
+  const { setActiveHouseholdId, activeHouseholdId } = useActiveHousehold();
 
   const currentMember = members.find((m) => m.userId === userId);
   const canEdit = currentMember?.isAdmin ?? false;
 
   const [householdName, setHouseholdName] = useState(name);
-  const [isEditingName, setIsEditingName] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const handleToggleEdit = () => {
     if (!canEdit) return;
 
-    if (isEditingName) {
+    if (isEditing) {
       const trimmed = householdName?.trim() ?? '';
       if (!trimmed) return;
       renameHouseholdMutation.mutate({ id, name: trimmed });
     }
-    setIsEditingName((prev) => !prev);
+    setIsEditing((prev) => !prev);
+  };
+
+  const handleRemoveMember = (memberId: string, memberName?: string | null) => {
+    if (!id) return;
+    Alert.alert('Ta bort medlem', `Vill du ta bort ${memberName ?? 'denna medlem'}?`, [
+      { text: 'Avbryt', style: 'cancel' },
+      {
+        text: 'Ta bort',
+        style: 'destructive',
+        onPress: () =>
+          removeMemberMutation.mutate(
+            { householdId: id, memberId },
+            {
+              onSuccess: () => {
+                if (memberId === activeHouseholdId) {
+                  setActiveHouseholdId(null);
+                }
+              },
+            },
+          ),
+      },
+    ]);
   };
 
   return (
@@ -53,13 +81,11 @@ export default function HouseholdInfoScreen() {
       <AppHeader
         leftAction={{ icon: 'arrow-left', onPress: () => router.back() }}
         rightActions={
-          canEdit
-            ? [{ icon: isEditingName ? 'check' : 'pen', onPress: handleToggleEdit }]
-            : undefined
+          canEdit ? [{ icon: isEditing ? 'check' : 'pen', onPress: handleToggleEdit }] : undefined
         }
-        title={isEditingName ? undefined : householdName ?? 'Hushåll'}
+        title={isEditing ? undefined : householdName ?? 'Hushåll'}
         titleContent={
-          isEditingName ? (
+          isEditing ? (
             <TextInput
               mode="flat"
               style={styles.titleInput}
@@ -89,6 +115,14 @@ export default function HouseholdInfoScreen() {
           {!isLoading &&
             members.map((member, index) => (
               <View key={`${member.name ?? 'member'}-${index}`} style={styles.memberRow}>
+                {isEditing && member.userId !== userId && (
+                  <IconButton
+                    icon="trash-can-outline"
+                    onPress={() => handleRemoveMember(member.userId)}
+                    accessibilityLabel={`Ta bort ${member.name ?? 'denna medlem'}`}
+                  />
+                )}
+
                 <View style={styles.memberAvatar}>
                   <Badge
                     size={24}

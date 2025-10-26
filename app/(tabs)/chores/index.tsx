@@ -5,13 +5,23 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-nat
 import { Card, IconButton } from 'react-native-paper';
 import { choreKeys, getChoresWithStatus } from '../../../api/chores';
 import { currentHouseholdAtom, currentUserAtom } from '../../../atoms';
+import AppHeader from '@/components/AppHeader';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function ChoreScreen() {
   const router = useRouter();
   const [currentHousehold] = useAtom(currentHouseholdAtom);
   const [currentUser] = useAtom(currentUserAtom);
+  const canAddChore = !!currentUser?.is_admin;
+  const householdName = currentHousehold?.name ?? 'Okänt';
+  const { colors } = useTheme();
 
-  const { data: chores, isLoading, isError, refetch } = useQuery({
+  const {
+    data: chores,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: choreKeys.list(currentHousehold?.id || ''),
     queryFn: () => getChoresWithStatus(currentHousehold?.id || ''),
     enabled: !!currentHousehold?.id,
@@ -21,7 +31,7 @@ export default function ChoreScreen() {
     return (
       <View style={[styles.container, styles.center]}>
         <View style={styles.header}>
-          <Text style={styles.title}>Hemma</Text>
+          <Text style={styles.title}>{householdName}</Text>
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#4A90E2" />
@@ -35,7 +45,7 @@ export default function ChoreScreen() {
     return (
       <View style={[styles.container, styles.center]}>
         <View style={styles.header}>
-          <Text style={styles.title}>Hemma</Text>
+          <Text style={styles.title}>{householdName}</Text>
         </View>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Kunde inte ladda sysslor</Text>
@@ -46,19 +56,16 @@ export default function ChoreScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Hemma</Text>
-        {currentUser?.is_admin && (
-          <IconButton
-            icon="plus-circle-outline"
-            size={36}
-            onPress={() => router.push('/chores/create')}
-            style={styles.plusButton}
-            iconColor="#000000"
-          />
-        )}
-      </View>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <AppHeader
+        title={householdName}
+        leftAction={{ icon: 'home-group', onPress: () => router.push('/(tabs)/household') }}
+        rightActions={
+          canAddChore
+            ? [{ icon: 'plus-circle-outline', onPress: () => router.push('/chores/create') }]
+            : undefined
+        }
+      />
 
       {!chores || chores.length === 0 ? (
         <View style={styles.emptyContainer}>
@@ -66,15 +73,10 @@ export default function ChoreScreen() {
             <Text style={styles.iconText}>📋</Text>
           </View>
           <Text style={styles.emptyTitle}>Inga sysslor än</Text>
-          <Text style={styles.emptySubtitle}>
-            Tryck på + för att lägga till din första syssla
-          </Text>
+          <Text style={styles.emptySubtitle}>Tryck på + för att lägga till din första syssla</Text>
         </View>
       ) : (
-        <ScrollView 
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollViewContent}
-        >
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
           {chores.map((chore) => (
             <Card
               key={chore.id}
@@ -84,10 +86,12 @@ export default function ChoreScreen() {
               <Card.Content style={styles.cardContent}>
                 <Text style={styles.choreName}>{chore.name}</Text>
 
-                <View style={[
-                  styles.dayBadge,
-                  chore.is_overdue ? styles.dayBadgeOverdue : styles.dayBadgeNormal
-                ]}>
+                <View
+                  style={[
+                    styles.dayBadge,
+                    chore.is_overdue ? styles.dayBadgeOverdue : styles.dayBadgeNormal,
+                  ]}
+                >
                   <Text style={styles.dayNumber}>{chore.days_since_last}</Text>
                 </View>
               </Card.Content>
