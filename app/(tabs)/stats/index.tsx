@@ -1,5 +1,6 @@
 import AppHeader from "@/components/AppHeader";
 import PeriodPicker, {
+  getPeriodRange,
   PeriodPickerValue,
 } from "@/components/stats/PeriodPicker";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -13,6 +14,14 @@ export default function StatScreen() {
     mode: "week",
     anchor: new Date(),
   });
+
+  const range = getPeriodRange(period.mode, period.anchor);
+  console.log(
+    "Aktuell period:",
+    range.from.toISOString(),
+    "–",
+    range.to.toISOString()
+  );
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>

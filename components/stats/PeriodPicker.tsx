@@ -110,3 +110,42 @@ const styles = StyleSheet.create({
   side: { width: SIDE_WIDTH, alignItems: "center", justifyContent: "center" },
   title: { flex: 1, textAlign: "center", textTransform: "capitalize" },
 });
+
+/** Returnerar ett from/to-intervall baserat på vald period */
+export function getPeriodRange(mode: PeriodMode, anchor: Date) {
+  const from = new Date(anchor);
+  const to = new Date(anchor);
+
+  switch (mode) {
+    case "week": {
+      const day = anchor.getDay();
+      const diffToMonday = day === 0 ? -6 : 1 - day;
+      from.setDate(anchor.getDate() + diffToMonday);
+      from.setHours(0, 0, 0, 0);
+
+      to.setDate(from.getDate() + 6);
+      to.setHours(23, 59, 59, 999);
+      break;
+    }
+
+    case "month": {
+      from.setDate(1);
+      from.setHours(0, 0, 0, 0);
+
+      to.setMonth(anchor.getMonth() + 1, 0);
+      to.setHours(23, 59, 59, 999);
+      break;
+    }
+
+    case "year": {
+      from.setMonth(0, 1);
+      from.setHours(0, 0, 0, 0);
+
+      to.setMonth(11, 31);
+      to.setHours(23, 59, 59, 999);
+      break;
+    }
+  }
+
+  return { from, to };
+}
