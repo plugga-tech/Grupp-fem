@@ -2,7 +2,8 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { AVATAR_COLORS, AVATAR_EMOJI, AvatarKey } from '@/utils/avatar';
 import React from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
-import { Badge, Button, Card, IconButton } from 'react-native-paper';
+import { Badge, Card, Button, IconButton } from 'react-native-paper';
+import ActionButton from './ActionButton';
 
 export type HouseholdSummary = {
   id: string;
@@ -127,10 +128,23 @@ export function HouseholdList({
       />
 
       <View style={styles.bottomBar}>
-        <Button mode="contained" icon="plus" style={styles.barBtn} onPress={onCreatePress}>
-          Skapa
-        </Button>
-        <Button onPress={onJoinPress}>Gå med</Button>
+        <ActionButton
+          label="Skapa"
+          icon="plus-circle-outline"
+          onPress={onCreatePress}
+          backgroundColor="#111827"
+          textColor="#fff"
+          style={styles.barBtn}
+        />
+
+        <ActionButton
+          label="Gå med"
+          icon="account-plus-outline"
+          onPress={onJoinPress}
+          backgroundColor="#111827"
+          textColor="#fff"
+          style={styles.barBtn}
+        />
       </View>
     </>
   );
