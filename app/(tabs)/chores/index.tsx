@@ -27,6 +27,15 @@ export default function ChoreScreen() {
     enabled: !!currentHousehold?.id,
   });
 
+  const getAvatarEmoji = (userId: string) => {
+
+    if (userId === currentUser?.id) { //admin avatar
+      return '🦁'; 
+    }
+    // Andra användare får en annan avatar just nu 
+    return '👤';
+  };
+
   if (isLoading) {
     return (
       <View style={[styles.container, styles.center]}>
@@ -77,26 +86,33 @@ export default function ChoreScreen() {
         </View>
       ) : (
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
-          {chores.map((chore) => (
-            <Card
-              key={chore.id}
-              style={styles.card}
-              onPress={() => router.push(`/chores/details/${chore.id}`)}
-            >
-              <Card.Content style={styles.cardContent}>
-                <Text style={styles.choreName}>{chore.name}</Text>
+          {chores.map((chore) => {
+            const hasAvatars = chore.completed_by_avatars && chore.completed_by_avatars.length > 0;
+            
+            return (
+              <Card
+                key={chore.id}
+                style={styles.card}
+                onPress={() => router.push(`/chores/details/${chore.id}`)}
+              >
+                <Card.Content style={styles.cardContent}>
+                  <Text style={styles.choreName}>{chore.name}</Text>
 
-                <View
-                  style={[
-                    styles.dayBadge,
-                    chore.is_overdue ? styles.dayBadgeOverdue : styles.dayBadgeNormal,
-                  ]}
-                >
-                  <Text style={styles.dayNumber}>{chore.days_since_last}</Text>
-                </View>
-              </Card.Content>
-            </Card>
-          ))}
+                  
+                    // Visa dagssiffra
+                    <View
+                      style={[
+                        styles.dayBadge,
+                        chore.is_overdue ? styles.dayBadgeOverdue : styles.dayBadgeNormal,
+                      ]}
+                    >
+                      <Text style={styles.dayNumber}>{chore.days_since_last}</Text>
+                    </View>
+                  )}
+                </Card.Content>
+              </Card>
+            );
+          })}
         </ScrollView>
       )}
     </View>
@@ -160,6 +176,7 @@ const styles = StyleSheet.create({
     color: '#000',
     flex: 1,
   },
+
   dayBadge: {
     minWidth: 36,
     height: 36,
@@ -170,10 +187,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   dayBadgeNormal: {
-    backgroundColor: '#6AC08B',
+    backgroundColor: '#D3D3D3', 
   },
   dayBadgeOverdue: {
-    backgroundColor: '#CD5D6F',
+    backgroundColor: '#CD5D6F', 
   },
   dayNumber: {
     fontSize: 16,
