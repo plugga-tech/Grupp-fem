@@ -58,6 +58,7 @@ export default function TabLayout() {
         name="household"
         options={{
           title: 'Households',
+          href: null,
         }}
       />
       <Tabs.Screen
