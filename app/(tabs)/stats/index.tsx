@@ -1,19 +1,23 @@
 import AppHeader from "@/components/AppHeader";
+import PeriodPicker, {
+  PeriodPickerValue,
+} from "@/components/stats/PeriodPicker";
 import { useTheme } from "@/contexts/ThemeContext";
 import React, { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { Card, SegmentedButtons, Text } from "react-native-paper";
-
-type PeriodKey = "currentWeek" | "lastWeek" | "lastMonth";
+import { Card, Text } from "react-native-paper";
 
 export default function StatScreen() {
   const { colors } = useTheme();
-  const [period, setPeriod] = useState<PeriodKey>("currentWeek");
+  const [period, setPeriod] = useState<PeriodPickerValue>({
+    mode: "week",
+    anchor: new Date(),
+  });
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <AppHeader
-        title="Hushållet"
+        title="Statistik"
         rightActions={[
           {
             icon: "chart-box-outline",
@@ -22,21 +26,14 @@ export default function StatScreen() {
           },
         ]}
       />
+
       <ScrollView contentContainerStyle={styles.content}>
         {/* Periodväljare */}
-        <SegmentedButtons
-          value={period}
-          onValueChange={(v) => setPeriod(v as PeriodKey)}
-          buttons={[
-            { value: "currentWeek", label: "Nuvarande vecka" },
-            { value: "lastWeek", label: "Förra veckan" },
-            { value: "lastMonth", label: "Förra månaden" },
-          ]}
-          density="regular"
-          style={styles.segments}
-        />
+        <View style={styles.periodWrapper}>
+          <PeriodPicker value={period} onChange={setPeriod} />
+        </View>
 
-        {/* Stor "Total"-pie placeholder */}
+        {/* "Total"-pie placeholder */}
         <Card style={[styles.totalCard, { backgroundColor: colors.card }]}>
           <Card.Content style={styles.center}>
             <View style={[styles.bigCircle, { borderColor: colors.border }]} />
@@ -49,7 +46,7 @@ export default function StatScreen() {
           </Card.Content>
         </Card>
 
-        {/* Små “per syssla” placeholders – tre rader à tre kort funkar bra */}
+        {/* “per syssla” placeholders */}
         <View style={styles.grid}>
           {[
             "Laga mat",
@@ -83,9 +80,9 @@ const CIRCLE_SIZE = 180;
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 16, gap: 16 },
-  segments: { marginBottom: 8 },
-  totalCard: { borderRadius: 16, paddingVertical: 12 },
+  content: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 16 },
+  periodWrapper: { marginBottom: 4 }, // litet kontrollerat avstånd
+  totalCard: { borderRadius: 16, paddingVertical: 12, marginBottom: 16 },
   center: { alignItems: "center", justifyContent: "center" },
   bigCircle: {
     width: CIRCLE_SIZE,
@@ -98,8 +95,8 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 12,
     justifyContent: "space-between",
+    rowGap: 12,
   },
   smallCard: {
     width: "31%",
