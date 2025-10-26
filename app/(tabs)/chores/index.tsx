@@ -98,7 +98,23 @@ export default function ChoreScreen() {
                 <Card.Content style={styles.cardContent}>
                   <Text style={styles.choreName}>{chore.name}</Text>
 
-                  
+                  {hasAvatars ? (
+          
+                    <View style={styles.avatarContainer}>
+                      {chore.completed_by_avatars!.slice(0, 3).map((userId, index) => (
+                        <View key={index} style={styles.avatarCircle}>
+                          <Text style={styles.avatarEmoji}>
+                            {getAvatarEmoji(userId)}
+                          </Text>
+                        </View>
+                      ))}
+                      {chore.completed_by_avatars!.length > 3 && (
+                        <View style={styles.avatarCircle}>
+                          <Text style={styles.avatarMore}>+{chore.completed_by_avatars!.length - 3}</Text>
+                        </View>
+                      )}
+                    </View>
+                  ) : (
                     // Visa dagssiffra
                     <View
                       style={[
