@@ -4,6 +4,7 @@ import {
   joinHouseholdByCode,
   updateHouseholdName,
   leaveHousehold,
+  removeMember,
 } from '@/api/household';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -37,10 +38,20 @@ export function useHouseholdMutations(userId: string) {
     },
   });
 
+  const removeMemberMutation = useMutation({
+    mutationFn: ({ householdId, memberId }: { householdId: string; memberId: string }) =>
+      removeMember(userId, householdId, memberId),
+    onSuccess: (_, { householdId }) => {
+      queryClient.invalidateQueries({ queryKey: householdKeys.list(userId) });
+      queryClient.invalidateQueries({ queryKey: householdKeys.members(householdId) });
+    },
+  });
+
   return {
     createHouseholdMutation,
     joinHouseholdMutation,
     renameHouseholdMutation,
     leaveHouseholdMutation,
+    removeMemberMutation,
   };
 }
