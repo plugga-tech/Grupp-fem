@@ -1,13 +1,23 @@
 import { useTheme } from '@/contexts/ThemeContext';
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { Icon } from 'react-native-paper';
+
+const TAB_ICONS: Record<string, string> = {
+  index: 'home-variant-outline',
+  'stats/index': 'chart-box-outline',
+  chores: 'checkbox-multiple-marked-outline',
+  household: 'home-group',
+  profile: 'account-circle-outline',
+  'profile/index': 'account-circle-outline',
+};
 
 export default function TabLayout() {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
 
   return (
     <Tabs
-      screenOptions={{
+      screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: {
           backgroundColor: colors.header,
@@ -20,18 +30,21 @@ export default function TabLayout() {
           fontSize: 12,
           fontWeight: '500',
         },
-      }}
+        tabBarIcon: ({ color, size }) => (
+          <Icon source={TAB_ICONS[route.name] ?? 'dots-grid'} size={size} color={color} />
+        ),
+      })}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: 'Hem',
         }}
       />
       <Tabs.Screen
         name="stats/index"
         options={{
-          title: 'Stats',
+          title: 'Statistik',
         }}
       />
       <Tabs.Screen
@@ -48,9 +61,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="profile/index"
         options={{
-          title: 'Profile',
+          title: 'Profil',
         }}
       />
     </Tabs>
