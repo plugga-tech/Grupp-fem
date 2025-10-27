@@ -1,4 +1,4 @@
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from '@/state/ThemeContext';
 import React from 'react';
 import { View } from 'react-native';
 import { Appbar } from 'react-native-paper';

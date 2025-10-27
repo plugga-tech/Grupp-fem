@@ -1,3 +1,5 @@
+import AppHeader from '@/components/AppHeader';
+import { useTheme } from '@/state/ThemeContext';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
@@ -5,8 +7,6 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-nat
 import { Card, IconButton } from 'react-native-paper';
 import { choreKeys, getChoresWithStatus } from '../../../api/chores';
 import { currentHouseholdAtom, currentUserAtom } from '../../../atoms';
-import AppHeader from '@/components/AppHeader';
-import { useTheme } from '@/contexts/ThemeContext';
 
 export default function ChoreScreen() {
   const router = useRouter();
@@ -28,11 +28,11 @@ export default function ChoreScreen() {
   });
 
   const getAvatarEmoji = (userId: string) => {
-
-    if (userId === currentUser?.id) { //admin avatar
-      return '🦁'; 
+    if (userId === currentUser?.id) {
+      //admin avatar
+      return '🦁';
     }
-    // Andra användare får en annan avatar just nu 
+    // Andra användare får en annan avatar just nu
     return '👤';
   };
 
@@ -88,7 +88,7 @@ export default function ChoreScreen() {
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
           {chores.map((chore) => {
             const hasAvatars = chore.completed_by_avatars && chore.completed_by_avatars.length > 0;
-            
+
             return (
               <Card
                 key={chore.id}
@@ -99,18 +99,17 @@ export default function ChoreScreen() {
                   <Text style={styles.choreName}>{chore.name}</Text>
 
                   {hasAvatars ? (
-          
                     <View style={styles.avatarContainer}>
                       {chore.completed_by_avatars!.slice(0, 3).map((userId, index) => (
                         <View key={index} style={styles.avatarCircle}>
-                          <Text style={styles.avatarEmoji}>
-                            {getAvatarEmoji(userId)}
-                          </Text>
+                          <Text style={styles.avatarEmoji}>{getAvatarEmoji(userId)}</Text>
                         </View>
                       ))}
                       {chore.completed_by_avatars!.length > 3 && (
                         <View style={styles.avatarCircle}>
-                          <Text style={styles.avatarMore}>+{chore.completed_by_avatars!.length - 3}</Text>
+                          <Text style={styles.avatarMore}>
+                            +{chore.completed_by_avatars!.length - 3}
+                          </Text>
                         </View>
                       )}
                     </View>
@@ -225,10 +224,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   dayBadgeNormal: {
-    backgroundColor: '#D3D3D3', 
+    backgroundColor: '#D3D3D3',
   },
   dayBadgeOverdue: {
-    backgroundColor: '#CD5D6F', 
+    backgroundColor: '#CD5D6F',
   },
   dayNumber: {
     fontSize: 16,
