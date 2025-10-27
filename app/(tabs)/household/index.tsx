@@ -12,7 +12,8 @@ import { getAuth } from 'firebase/auth';
 import { useAtom } from 'jotai';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
-import { HouseholdList } from '../../../components/HouseholdList';
+import { HouseholdList, HouseholdSummary } from '../../../components/HouseholdList';
+import { getUserHouseholds, UserHousehold } from '@/api/user';
 
 export default function HouseholdScreen() {
   const router = useRouter();
@@ -26,28 +27,20 @@ export default function HouseholdScreen() {
   const [createOpen, setCreateOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
 
-  type Household = {
-    id: string;
-    name?: string;
-    code?: string;
-    avatar?: AvatarKey;
-    membersCount?: number;
-  };
-
   const {
     data: household = [],
     error,
     refetch,
-  } = useQuery<Household[]>({
+  } = useQuery<UserHousehold[]>({
     queryKey: householdKeys.list(userId || ''),
     enabled: !!userId,
-    queryFn: () => getHouseholds(userId!),
-    refetchOnWindowFocus: true, // Correct property name
+    queryFn: () => getUserHouseholds(userId!),
+    refetchOnWindowFocus: true,
   });
 
   // Set first household as active by default
   useEffect(() => {
-    const householdList = household as Household[];
+    const householdList = household as UserHousehold[];
     if (householdList.length > 0 && !activeHouseholdId) {
       setCurrentHousehold(householdList[0]);
     }
@@ -60,8 +53,8 @@ export default function HouseholdScreen() {
     }, [refetch]),
   );
 
-  const handleSetActiveHousehold = (selectedHousehold: any) => {
-    setCurrentHousehold(selectedHousehold);
+  const handleSetActiveHousehold = (selectedHousehold: HouseholdSummary) => {
+    setCurrentHousehold(selectedHousehold as UserHousehold);
     Alert.alert(
       'Hushåll Aktiverat',
       `"${selectedHousehold.name}" är nu ditt aktiva hushåll. Du kan se detta i din profil.`,
