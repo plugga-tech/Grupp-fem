@@ -1,12 +1,12 @@
 import { getHouseholdMembers, householdKeys } from '@/api/household';
-import ActionButton from '@/components/ActionButton';
+import { currentHouseholdAtom } from '@/atoms';
 import AppHeader from '@/components/AppHeader';
-import { useActiveHousehold } from '@/contexts/ActiveHouseholdContext';
 import { useHouseholdMutations } from '@/hooks/useHouseholdMutations';
 import { AVATAR_COLORS, AVATAR_EMOJI, AvatarKey } from '@/utils/avatar';
 import { useQuery } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { getAuth } from 'firebase/auth';
+import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { Badge, Card, IconButton, TextInput } from 'react-native-paper';
@@ -34,7 +34,8 @@ export default function HouseholdInfoScreen() {
 
   const { removeMemberMutation, renameHouseholdMutation } = useHouseholdMutations(userId ?? '');
 
-  const { setActiveHouseholdId, activeHouseholdId } = useActiveHousehold();
+  const [currentHousehold, setCurrentHousehold] = useAtom(currentHouseholdAtom);
+  const activeHouseholdId = currentHousehold?.id ?? null;
 
   const currentMember = members.find((m) => m.userId === userId);
   const canEdit = currentMember?.isAdmin ?? false;
@@ -66,7 +67,7 @@ export default function HouseholdInfoScreen() {
             {
               onSuccess: () => {
                 if (memberId === activeHouseholdId) {
-                  setActiveHouseholdId(null);
+                  setCurrentHousehold(null);
                 }
               },
             },
