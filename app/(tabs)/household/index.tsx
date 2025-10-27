@@ -1,55 +1,50 @@
 import { getHouseholds, householdKeys } from '@/api/household';
+import { currentHouseholdAtom } from '@/atoms';
 import AppHeader from '@/components/AppHeader';
 import CreateHouseholdModal from '@/components/CreateHouseholdModal';
 import JoinHouseholdModal from '@/components/JoinHouseholdModal';
-import { useActiveHousehold } from '@/contexts/ActiveHouseholdContext';
-import { useTheme } from '@/contexts/ThemeContext';
 import { useHouseholdMutations } from '@/hooks/useHouseholdMutations';
+import { useTheme } from '@/state/ThemeContext';
 import { AvatarKey } from '@/utils/avatar';
 import { useQuery } from '@tanstack/react-query';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { getAuth } from 'firebase/auth';
+import { useAtom } from 'jotai';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
-import { HouseholdList } from '../../../components/HouseholdList';
+import { HouseholdList, HouseholdSummary } from '../../../components/HouseholdList';
+import { getUserHouseholds, UserHousehold } from '@/api/user';
 
 export default function HouseholdScreen() {
   const router = useRouter();
   const auth = getAuth();
   const userId = auth.currentUser?.uid ?? null;
   const { createHouseholdMutation, joinHouseholdMutation } = useHouseholdMutations(userId ?? '');
-  const { activeHouseholdId, setActiveHouseholdId } = useActiveHousehold();
+  const [currentHousehold, setCurrentHousehold] = useAtom(currentHouseholdAtom);
+  const activeHouseholdId = currentHousehold?.id ?? null;
   const { colors } = useTheme();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
 
-  type Household = {
-    id: string;
-    name?: string;
-    code?: string;
-    avatar?: AvatarKey;
-    membersCount?: number;
-  };
-
   const {
     data: household = [],
     error,
     refetch,
-  } = useQuery<Household[]>({
+  } = useQuery<UserHousehold[]>({
     queryKey: householdKeys.list(userId || ''),
     enabled: !!userId,
-    queryFn: () => getHouseholds(userId!),
-    refetchOnWindowFocus: true, // Correct property name
+    queryFn: () => getUserHouseholds(userId!),
+    refetchOnWindowFocus: true,
   });
 
   // Set first household as active by default
   useEffect(() => {
-    const householdList = household as Household[];
+    const householdList = household as UserHousehold[];
     if (householdList.length > 0 && !activeHouseholdId) {
-      setActiveHouseholdId(householdList[0].id);
+      setCurrentHousehold(householdList[0]);
     }
-  }, [household, activeHouseholdId, setActiveHouseholdId]);
+  }, [household, activeHouseholdId, setCurrentHousehold]);
 
   // Refresh data when screen comes into focus
   useFocusEffect(
@@ -58,8 +53,8 @@ export default function HouseholdScreen() {
     }, [refetch]),
   );
 
-  const handleSetActiveHousehold = (selectedHousehold: any) => {
-    setActiveHouseholdId(selectedHousehold.id);
+  const handleSetActiveHousehold = (selectedHousehold: HouseholdSummary) => {
+    setCurrentHousehold(selectedHousehold as UserHousehold);
     Alert.alert(
       'Hushåll Aktiverat',
       `"${selectedHousehold.name}" är nu ditt aktiva hushåll. Du kan se detta i din profil.`,
