@@ -1,7 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View, Image } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
 
 export default function RegisterScreen() {
@@ -47,16 +47,14 @@ export default function RegisterScreen() {
 
     return (
         <View style={styles.container}>
-            {/* Avatar Section */}
-            <View style={styles.avatarSection}>
-                <View style={styles.avatarContainer}>
-                    <Text style={styles.avatar}>🦊</Text>
-                </View>
-                <View style={styles.avatarContainer}>
-                    <Text style={styles.avatar}>🐙</Text>
-                </View>
-            </View>
-
+            {/* Logo Section */}
+<View style={styles.logoContainer}>
+    <Image
+        source={require('@/assets/images/logo.png')} // byt till din faktiska sökväg
+        style={styles.logo}
+        resizeMode="contain"
+    />
+</View>
             {/* Title */}
             <Text style={styles.title}>Hushållet</Text>
 
@@ -145,23 +143,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 32,
         paddingTop: 80,
     },
-    avatarSection: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        marginBottom: 32,
-        gap: 16,
-    },
-    avatarContainer: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        backgroundColor: '#FFF0E6',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    avatar: {
-        fontSize: 32,
-    },
     title: {
         fontSize: 32,
         fontWeight: 'bold',
@@ -218,4 +199,14 @@ const styles = StyleSheet.create({
         marginTop: 24,
         lineHeight: 16,
     },
+    logoContainer: {
+    alignItems: 'center',
+    marginBottom: 32,
+    marginTop: 60, // flyttar ner loggan lite om den sitter för högt
+},
+logo: {
+    width: 180, // anpassa storlek efter hur stor du vill att loggan ska vara
+    height: 180,
+},
+
 });
