@@ -33,6 +33,7 @@ export default function AppHeader({
         borderBottomWidth: 1,
       }}
     >
+      {/* Visa leftAction om den finns, annars visa tom View för spacing */}
       {leftAction ? (
         <Appbar.Action
           icon={leftAction.icon}
@@ -41,23 +42,28 @@ export default function AppHeader({
           iconColor={colors.text}
         />
       ) : (
-        <Appbar.Action icon="menu" onPress={() => {}} iconColor={colors.text} />
+        <View style={{ width: 48 }} />
       )}
+      
       {titleContent ? (
         <View style={{ flex: 1, alignItems: 'center' }}>{titleContent}</View>
       ) : (
         <Appbar.Content title={title || ''} color={colors.text} />
       )}
 
-      {rightActions.map((action) => (
-        <Appbar.Action
-          key={action.icon}
-          icon={action.icon}
-          onPress={action.onPress}
-          accessibilityLabel={action.accessibilityLabel}
-          iconColor={colors.text}
-        />
-      ))}
+      {rightActions.length > 0 ? (
+        rightActions.map((action) => (
+          <Appbar.Action
+            key={action.icon}
+            icon={action.icon}
+            onPress={action.onPress}
+            accessibilityLabel={action.accessibilityLabel}
+            iconColor={colors.text}
+          />
+        ))
+      ) : (
+        <View style={{ width: 48 }} />
+      )}
     </Appbar.Header>
   );
 }

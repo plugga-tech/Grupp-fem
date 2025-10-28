@@ -2,15 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { IconButton } from 'react-native-paper';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { completeChore, getChoresWithStatus } from '../../../../api/chores';
 import { getHouseholdMembers, householdKeys } from '@/api/household';
 import { getAuth } from 'firebase/auth';
@@ -24,18 +16,15 @@ export default function ChoreDetailsScreen() {
   const [currentHousehold] = useAtom(currentHouseholdAtom);
   const activeHouseholdId = currentHousehold?.id ?? null;
   const [showCompleteToast, setShowCompleteToast] = useState(false);
-
-  // Hämta current user från Firebase Auth
+// Hämta current user från Firebase Auth
   const auth = getAuth();
   const userId = auth.currentUser?.uid;
-
-  // Hämta household members för att kolla om användaren är admin
+// Hämta household members för att kolla om användaren är admin
   const { data: members = [] } = useQuery({
     queryKey: householdKeys.members(activeHouseholdId || ''),
     queryFn: () => getHouseholdMembers(activeHouseholdId || ''),
     enabled: !!activeHouseholdId,
   });
-
   // Kolla om current user är admin
   const currentMember = members.find((m) => m.userId === userId);
   const isAdmin = currentMember?.isAdmin ?? false;
