@@ -85,7 +85,6 @@ export async function getChoresWithStatus(householdId: string): Promise<ChoreWit
       });
     });
    
-   
     const choresWithStatus: ChoreWithStatus[] = chores.map((chore) => {
       const choreCompletions = completionsByChore[chore.id] || [];
      
@@ -94,6 +93,7 @@ export async function getChoresWithStatus(householdId: string): Promise<ChoreWit
       let daysSinceLast: number;
      
       if (choreCompletions.length > 0) {
+        // Om sysslan har blivit gjord minst en gång
         choreCompletions.sort((a, b) => {
           const dateA = a.done_at ? a.done_at.getTime() : 0;
           const dateB = b.done_at ? b.done_at.getTime() : 0;
@@ -105,25 +105,45 @@ export async function getChoresWithStatus(householdId: string): Promise<ChoreWit
           lastCompletedAt = lastCompletion.done_at;
           
           // Hämta alla user IDs som gjort sysslan idag
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
+          const todayDate = new Date();
+          todayDate.setHours(0, 0, 0, 0);
           
           completedByAvatars = choreCompletions
             .filter(c => {
               if (!c.done_at) return false;
               const completionDate = new Date(c.done_at);
               completionDate.setHours(0, 0, 0, 0);
-              return completionDate.getTime() === today.getTime();
+              return completionDate.getTime() === todayDate.getTime();
             })
             .map(c => c.done_by_user_id);
           
-          daysSinceLast = Math.floor((Date.now() - lastCompletion.done_at.getTime()) / (1000 * 60 * 60 * 24));
+          // Räkna dagar sedan senaste completion /normalisera till midnatt
+          const lastCompletionDate = new Date(lastCompletion.done_at);
+          lastCompletionDate.setHours(0, 0, 0, 0);
+          
+          const currentDate = new Date();
+          currentDate.setHours(0, 0, 0, 0);
+          
+          daysSinceLast = Math.floor((currentDate.getTime() - lastCompletionDate.getTime()) / (1000 * 60 * 60 * 24));
         } else {
-          daysSinceLast = Math.floor((Date.now() - chore.created_at.getTime()) / (1000 * 60 * 60 * 24));
+          // Om completion finns men inget done_at datum
+          const createdDate = new Date(chore.created_at);
+          createdDate.setHours(0, 0, 0, 0);
+          
+          const currentDate = new Date();
+          currentDate.setHours(0, 0, 0, 0);
+          
+          daysSinceLast = Math.floor((currentDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
         }
       } else {
-
-        daysSinceLast = Math.floor((Date.now() - chore.created_at.getTime()) / (1000 * 60 * 60 * 24));
+        // Om sysslan ALDRIG har blivit gjord /räkna från created_at
+        const createdDate = new Date(chore.created_at);
+        createdDate.setHours(0, 0, 0, 0);
+        
+        const currentDate = new Date();
+        currentDate.setHours(0, 0, 0, 0);
+        
+        daysSinceLast = Math.floor((currentDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
       }
    
       const isOverdue = daysSinceLast > chore.frequency;
