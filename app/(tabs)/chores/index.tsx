@@ -103,7 +103,7 @@ export default function ChoreScreen() {
             : undefined
         }
       />
-
+      
       {!chores || chores.length === 0 ? (
         <View style={styles.emptyContainer}>
           <View style={styles.iconPlaceholder}>
@@ -130,7 +130,30 @@ export default function ChoreScreen() {
                   <Card.Content style={styles.cardContent}>
                     <Text style={styles.choreName}>{chore.name}</Text>
 
-                   
+                    {hasAvatars ? (
+                      // Visa riktiga user-avatarer
+                      <View style={styles.avatarContainer}>
+                        {chore.completed_by_avatars!.slice(0, 3).map((userId, index) => {
+                          const { emoji, color } = getUserAvatar(userId);
+                          return (
+                            <Badge
+                              key={index}
+                              size={36}
+                              style={[styles.avatarBadge, { backgroundColor: color }]}
+                            >
+                              {emoji}
+                            </Badge>
+                          );
+                        })}
+                        {chore.completed_by_avatars!.length > 3 && (
+                          <View style={styles.avatarMore}>
+                            <Text style={styles.avatarMoreText}>
+                              +{chore.completed_by_avatars!.length - 3}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    ) : (
           
                       <View
                         style={[
