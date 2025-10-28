@@ -8,6 +8,7 @@ export interface UserHousehold {
   name: string;
   code: string;
   ownerId: string;
+  membersCount?: number;
   currentUserMember: {
     userId: string;
     name: string | null;
@@ -23,7 +24,6 @@ export interface UserHousehold {
  */
 export async function getUserHouseholds(userId: string): Promise<UserHousehold[]> {
   try {
-    // Find all user's memberships
     const memberQuery = query(collection(db, 'member'), where('user_id', '==', userId));
     const memberSnapshot = await getDocs(memberQuery);
 
@@ -36,18 +36,25 @@ export async function getUserHouseholds(userId: string): Promise<UserHousehold[]
     for (const memberDoc of memberSnapshot.docs) {
       const memberData = memberDoc.data();
 
-      // Get household data
       const householdRef = doc(db, 'household', memberData.household_id);
       const householdDoc = await getDoc(householdRef);
 
       if (householdDoc.exists()) {
         const householdData = householdDoc.data();
 
+        const householdMembersQuery = query(
+          collection(db, 'member'), 
+          where('household_id', '==', householdDoc.id)
+        );
+        const householdMembersSnapshot = await getDocs(householdMembersQuery);
+        const membersCount = householdMembersSnapshot.size;
+
         households.push({
           id: householdDoc.id,
           name: householdData.name,
           code: householdData.code,
           ownerId: householdData.owner_id,
+          membersCount,
           currentUserMember: {
             userId: memberData.user_id,
             name: memberData.name || null,
@@ -58,9 +65,7 @@ export async function getUserHouseholds(userId: string): Promise<UserHousehold[]
       }
     }
 
-    // Sort by creation date (newest first)
     return households.sort((a, b) => {
-      // If we don't have creation dates, just return as is
       return 0;
     });
   } catch (error) {
@@ -87,16 +92,13 @@ export async function getUserHousehold(userId: string): Promise<UserHousehold | 
  */
 export async function updateUserDisplayName(user: User, newName: string): Promise<void> {
   try {
-    // Update Firebase Auth profile
     await updateProfile(user, {
       displayName: newName.trim(),
     });
 
-    // Update name in all household memberships
     const memberQuery = query(collection(db, 'member'), where('user_id', '==', user.uid));
     const memberSnapshot = await getDocs(memberQuery);
 
-    // Update each membership document
     const updatePromises = memberSnapshot.docs.map((memberDoc) =>
       updateDoc(memberDoc.ref, {
         name: newName.trim(),
