@@ -1,27 +1,61 @@
+import { ChoreCompletion, getCompletionsByRange } from "@/api/chores";
 import AppHeader from "@/components/AppHeader";
 import PeriodPicker, {
   getPeriodRange,
   PeriodPickerValue,
 } from "@/components/stats/PeriodPicker";
+import { useActiveHousehold } from "@/contexts/ActiveHouseholdContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Card, Text } from "react-native-paper";
 
 export default function StatScreen() {
   const { colors } = useTheme();
+  const { activeHouseholdId } = useActiveHousehold();
+
   const [period, setPeriod] = useState<PeriodPickerValue>({
     mode: "week",
     anchor: new Date(),
   });
 
+  const [loading, setLoading] = useState(false);
+  const [completions, setCompletions] = useState<ChoreCompletion[]>([]);
+
   const range = getPeriodRange(period.mode, period.anchor);
-  console.log(
-    "Aktuell period:",
-    range.from.toISOString(),
-    "–",
-    range.to.toISOString()
-  );
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!activeHouseholdId) {
+        setCompletions([]);
+        console.log("[stats] Ingen aktiv household vald ännu.");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const data = await getCompletionsByRange(
+          activeHouseholdId,
+          range.from,
+          range.to
+        );
+        setCompletions(data);
+
+        console.log(
+          `[stats] Hushåll: ${activeHouseholdId}` +
+            `\nPeriod: ${range.from.toISOString()} → ${range.to.toISOString()}` +
+            `\nAntal completions: ${data.length}`
+        );
+        if (data[0]) console.log("[stats] Första completion:", data[0]);
+      } catch (error) {
+        console.error("[stats] Fel vid hämtning av completions:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [activeHouseholdId, period.mode, period.anchor]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -90,7 +124,7 @@ const CIRCLE_SIZE = 180;
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 16 },
-  periodWrapper: { marginBottom: 4 }, // litet kontrollerat avstånd
+  periodWrapper: { marginBottom: 4 },
   totalCard: { borderRadius: 16, paddingVertical: 12, marginBottom: 16 },
   center: { alignItems: "center", justifyContent: "center" },
   bigCircle: {

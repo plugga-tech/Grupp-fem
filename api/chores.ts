@@ -192,3 +192,42 @@ export async function completeChore(choreId: string, householdId: string, userId
     throw new Error('Failed to complete chore', { cause: error });
   }
 }
+
+// Hämta completions för ett hushåll inom [from, to]
+export async function getCompletionsByRange(
+  householdId: string,
+  from: Date,
+  to: Date
+): Promise<ChoreCompletion[]> {
+  try {
+    const completionsRef = collection(db, 'chore_completion');
+    const q = query(
+      completionsRef,
+      where('household_id', '==', householdId),
+      where('done_at', '>=', Timestamp.fromDate(from)),
+      where('done_at', '<=', Timestamp.fromDate(to))
+    );
+
+    const snap = await getDocs(q);
+
+    // Mappa Firestore → TS-objekt och konvertera Timestamp → Date
+    const rows = snap.docs.map((d) => {
+      const data = d.data() as any;
+      return {
+        id: d.id,
+        chore_id: data.chore_id,
+        household_id: data.household_id,
+        done_by_user_id: data.done_by_user_id,
+        done_at: data.done_at?.toDate?.() ?? new Date(data.done_at),
+      } as ChoreCompletion;
+    });
+
+    // (Valfritt) sortera på tid
+    rows.sort((a, b) => a.done_at.getTime() - b.done_at.getTime());
+
+    return rows;
+  } catch (error) {
+    console.error('Error in getCompletionsByRange:', error);
+    throw new Error('Failed to fetch completions by range', { cause: error });
+  }
+}
