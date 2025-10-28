@@ -133,6 +133,7 @@ export default function ChoreScreen() {
                     <Text style={styles.choreName}>{chore.name}</Text>
 
                     {hasAvatars ? (
+                      // Visa avatarer om någon gjort sysslan idag
                       <View style={styles.avatarContainer}>
                         {chore.completed_by_avatars!.slice(0, 3).map((userId, index) => {
                           const { emoji, color } = getUserAvatar(userId);
@@ -155,14 +156,17 @@ export default function ChoreScreen() {
                         )}
                       </View>
                     ) : (
-                      <View
-                        style={[
-                          styles.dayBadge,
-                          chore.is_overdue ? styles.dayBadgeOverdue : styles.dayBadgeNormal,
-                        ]}
-                      >
-                        <Text style={styles.dayNumber}>{chore.days_since_last}</Text>
-                      </View>
+                  
+                      chore.days_since_last > 0 ? (
+                        <View
+                          style={[
+                            styles.dayBadge,
+                            chore.is_overdue ? styles.dayBadgeOverdue : styles.dayBadgeNormal,
+                          ]}
+                        >
+                          <Text style={styles.dayNumber}>{chore.days_since_last}</Text>
+                        </View>
+                      ) : null
                     )}
                   </Card.Content>
                 </Card>
@@ -197,12 +201,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     elevation: 2,
+    minHeight: 60,
   },
   cardContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 8,
+    minHeight: 60,
   },
   choreName: {
     fontSize: 18,
@@ -241,7 +247,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   dayBadgeNormal: {
-    backgroundColor: '#D3D3D3',
+    backgroundColor: '#9E9E9E',
   },
   dayBadgeOverdue: {
     backgroundColor: '#CD5D6F',
