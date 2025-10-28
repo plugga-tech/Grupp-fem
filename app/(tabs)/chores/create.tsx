@@ -1,18 +1,28 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { IconButton } from 'react-native-paper';
 import { choreKeys, createChore } from '../../../api/chores';
-import { currentHouseholdAtom } from '../../../atoms';
-
+import { useActiveHousehold } from '@/contexts/ActiveHouseholdContext';
+import { getHouseholds, householdKeys } from '@/api/household';
+import { getAuth } from 'firebase/auth';
 
 export default function CreateChoreScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [currentHousehold] = useAtom(currentHouseholdAtom);
+  const { activeHouseholdId } = useActiveHousehold();
+  const auth = getAuth();
+  const userId = auth.currentUser?.uid;
 
+  // Hämta household info för att visa namnet
+  const { data: households = [] } = useQuery({
+    queryKey: householdKeys.list(userId || ''),
+    queryFn: () => getHouseholds(userId!),
+    enabled: !!userId,
+  });
+
+  const activeHousehold = households.find(h => h.id === activeHouseholdId);
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -22,11 +32,9 @@ export default function CreateChoreScreen() {
   const [showWeightPicker, setShowWeightPicker] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-
   const mutation = useMutation({
     mutationFn: createChore,
     onSuccess: (data, variables) => {
-
       queryClient.invalidateQueries({
         queryKey: choreKeys.list(variables.household_id)
       });
@@ -42,22 +50,19 @@ export default function CreateChoreScreen() {
     },
   });
 
-
   const handleSave = () => {
     if (!name.trim()) {
       Alert.alert('Fel', 'Ange ett namn för sysslan');
       return;
     }
 
-
-    if (!currentHousehold?.id) {
+    if (!activeHouseholdId) {
       Alert.alert('Fel', 'Inget hushåll valt');
       return;
     }
 
-
     mutation.mutate({
-      household_id: currentHousehold.id,
+      household_id: activeHouseholdId,
       name: name.trim(),
       description: description.trim(),
       frequency: frequency,
@@ -65,15 +70,11 @@ export default function CreateChoreScreen() {
     });
   };
 
-
   const frequencyOptions = Array.from({ length: 31 }, (_, i) => i + 1);
   const weightOptions = [1, 2, 4, 6, 8];
 
-
   return (
     <View style={styles.container}>
-
-
       <View style={styles.header}>
         <IconButton
           icon="arrow-left"
@@ -85,9 +86,7 @@ export default function CreateChoreScreen() {
         <View style={{ width: 48 }} />
       </View>
 
-
       <ScrollView style={styles.form}>
-
         <TextInput
           style={styles.input}
           placeholder="Titel"
@@ -95,7 +94,6 @@ export default function CreateChoreScreen() {
           onChangeText={setName}
           placeholderTextColor="#C0C0C0"
         />
-
 
         <TextInput
           style={[styles.input, styles.textArea]}
@@ -134,7 +132,6 @@ export default function CreateChoreScreen() {
           </View>
         </TouchableOpacity>
       </ScrollView>
-
 
       {/* Frequency Picker Modal */}
       <Modal
@@ -180,7 +177,6 @@ export default function CreateChoreScreen() {
         </TouchableOpacity>
       </Modal>
 
-
       {/* Weight Picker Modal */}
       <Modal
         visible={showWeightPicker}
@@ -221,13 +217,11 @@ export default function CreateChoreScreen() {
         </TouchableOpacity>
       </Modal>
 
-
       {showSuccess && (
         <View style={styles.successToast}>
           <Text style={styles.successToastText}>✅ Sysslan har sparats</Text>
         </View>
       )}
-
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity
@@ -254,7 +248,6 @@ export default function CreateChoreScreen() {
     </View>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {
