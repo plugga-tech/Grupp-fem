@@ -1,38 +1,60 @@
+import { getHouseholdMembers, householdKeys } from '@/api/household';
+import AppHeader from '@/components/AppHeader';
+import { AVATAR_COLORS, AVATAR_EMOJI, AvatarKey } from '@/utils/avatar';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
+import { getAuth } from 'firebase/auth';
 import { useAtom } from 'jotai';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Card, IconButton } from 'react-native-paper';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Badge, Card, IconButton } from 'react-native-paper';
 import { choreKeys, getChoresWithStatus } from '../../../api/chores';
-import { currentHouseholdAtom, currentUserAtom } from '../../../atoms';
-import AppHeader from '@/components/AppHeader';
-import { useTheme } from '@/contexts/ThemeContext';
+import { currentHouseholdAtom } from '../../../atoms';
 
 export default function ChoreScreen() {
   const router = useRouter();
   const [currentHousehold] = useAtom(currentHouseholdAtom);
-  const [currentUser] = useAtom(currentUserAtom);
-  const canAddChore = !!currentUser?.is_admin;
-  const householdName = currentHousehold?.name ?? 'Okänt';
-  const { colors } = useTheme();
+  const activeHouseholdId = currentHousehold?.id ?? null;
+  
+  // Hämta current user från Firebase Auth
+  const auth = getAuth();
+  const userId = auth.currentUser?.uid;
 
+  // Hämta household members för att få deras avatarer OCH kolla admin
+  const { data: members = [] } = useQuery({
+    queryKey: householdKeys.members(activeHouseholdId || ''),
+    queryFn: () => getHouseholdMembers(activeHouseholdId || ''),
+    enabled: !!activeHouseholdId,
+  });
+
+  // Kolla om current user är admin
+  const currentMember = members.find(m => m.userId === userId);
+  const canAddChore = currentMember?.isAdmin ?? false;
+ 
   const {
     data: chores,
     isLoading,
     isError,
     refetch,
   } = useQuery({
-    queryKey: choreKeys.list(currentHousehold?.id || ''),
-    queryFn: () => getChoresWithStatus(currentHousehold?.id || ''),
-    enabled: !!currentHousehold?.id,
+    queryKey: choreKeys.list(activeHouseholdId || ''),
+    queryFn: () => getChoresWithStatus(activeHouseholdId || ''),
+    enabled: !!activeHouseholdId,
   });
+
+  const getUserAvatar = (userId: string) => {
+    const member = members.find(m => m.userId === userId);
+    if (member?.avatar) {
+      return {
+        emoji: AVATAR_EMOJI[member.avatar as AvatarKey],
+        color: AVATAR_COLORS[member.avatar as AvatarKey],
+      };
+    }
+    return { emoji: '👤', color: '#D3D3D3' };
+  };
 
   if (isLoading) {
     return (
       <View style={[styles.container, styles.center]}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{householdName}</Text>
-        </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#4A90E2" />
           <Text style={styles.loadingText}>Laddar sysslor...</Text>
@@ -44,9 +66,6 @@ export default function ChoreScreen() {
   if (isError) {
     return (
       <View style={[styles.container, styles.center]}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{householdName}</Text>
-        </View>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Kunde inte ladda sysslor</Text>
           <IconButton icon="refresh" onPress={() => refetch()} />
@@ -55,8 +74,28 @@ export default function ChoreScreen() {
     );
   }
 
+  if (!activeHouseholdId) {
+    return (
+      <View style={styles.container}>
+        <AppHeader
+          title="Hemma"
+          leftAction={{ icon: 'home-group', onPress: () => router.push('/(tabs)/household') }}
+        />
+        <View style={styles.emptyContainer}>
+          <View style={styles.iconPlaceholder}>
+            <Text style={styles.iconText}>🏠</Text>
+          </View>
+          <Text style={styles.emptyTitle}>Inget aktivt hushåll</Text>
+          <Text style={styles.emptySubtitle}>Gå till Hushåll och välj ett aktivt hushåll</Text>
+        </View>
+      </View>
+    );
+  }
+
+  const householdName = currentHousehold?.name ?? 'Mitt Hushåll';
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={styles.container}>
       <AppHeader
         title={householdName}
         leftAction={{ icon: 'home-group', onPress: () => router.push('/(tabs)/household') }}
@@ -77,26 +116,63 @@ export default function ChoreScreen() {
         </View>
       ) : (
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
-          {chores.map((chore) => (
-            <Card
-              key={chore.id}
-              style={styles.card}
-              onPress={() => router.push(`/chores/details/${chore.id}`)}
-            >
-              <Card.Content style={styles.cardContent}>
-                <Text style={styles.choreName}>{chore.name}</Text>
+          {chores.map((chore) => {
+            const hasAvatars = chore.completed_by_avatars && chore.completed_by_avatars.length > 0;
+            
+            return (
+              <TouchableOpacity
+                key={chore.id}
+                onPress={() => {
+                  console.log('🎯 Navigating to chore:', chore.id);
+                  router.push(`/(tabs)/chores/details/${chore.id}`);
+                }}
+                activeOpacity={0.7}
+              >
+                <Card style={styles.card}>
+                  <Card.Content style={styles.cardContent}>
+                    <Text style={styles.choreName}>{chore.name}</Text>
 
-                <View
-                  style={[
-                    styles.dayBadge,
-                    chore.is_overdue ? styles.dayBadgeOverdue : styles.dayBadgeNormal,
-                  ]}
-                >
-                  <Text style={styles.dayNumber}>{chore.days_since_last}</Text>
-                </View>
-              </Card.Content>
-            </Card>
-          ))}
+                    {hasAvatars ? (
+                      // Visa avatarer om någon gjort sysslan idag
+                      <View style={styles.avatarContainer}>
+                        {chore.completed_by_avatars!.slice(0, 3).map((userId, index) => {
+                          const { emoji, color } = getUserAvatar(userId);
+                          return (
+                            <Badge
+                              key={index}
+                              size={36}
+                              style={[styles.avatarBadge, { backgroundColor: color }]}
+                            >
+                              {emoji}
+                            </Badge>
+                          );
+                        })}
+                        {chore.completed_by_avatars!.length > 3 && (
+                          <View style={styles.avatarMore}>
+                            <Text style={styles.avatarMoreText}>
+                              +{chore.completed_by_avatars!.length - 3}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    ) : (
+                  
+                      chore.days_since_last > 0 ? (
+                        <View
+                          style={[
+                            styles.dayBadge,
+                            chore.is_overdue ? styles.dayBadgeOverdue : styles.dayBadgeNormal,
+                          ]}
+                        >
+                          <Text style={styles.dayNumber}>{chore.days_since_last}</Text>
+                        </View>
+                      ) : null
+                    )}
+                  </Card.Content>
+                </Card>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       )}
     </View>
@@ -112,28 +188,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 24,
-    paddingHorizontal: 16,
-    backgroundColor: '#FFFFFF',
-    position: 'relative',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  title: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#000000',
-  },
-  plusButton: {
-    position: 'absolute',
-    right: 16,
-    top: 30,
-    margin: 0,
-  },
   scrollView: {
     flex: 1,
     paddingHorizontal: 16,
@@ -147,18 +201,41 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     elevation: 2,
+    minHeight: 60,
   },
   cardContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 8,
+    minHeight: 60,
   },
   choreName: {
     fontSize: 18,
     fontWeight: '500',
     color: '#000',
     flex: 1,
+  },
+  avatarContainer: {
+    flexDirection: 'row',
+    gap: 4,
+    marginLeft: 12,
+  },
+  avatarBadge: {
+    alignSelf: 'center',
+  },
+  avatarMore: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#E0E0E0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarMoreText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#666',
   },
   dayBadge: {
     minWidth: 36,
@@ -170,7 +247,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   dayBadgeNormal: {
-    backgroundColor: '#6AC08B',
+    backgroundColor: '#9E9E9E',
   },
   dayBadgeOverdue: {
     backgroundColor: '#CD5D6F',

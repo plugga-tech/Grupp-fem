@@ -1,7 +1,6 @@
-import { ActiveHouseholdProvider } from '@/contexts/ActiveHouseholdContext';
-import { AuthProvider, useAuth } from '@/contexts/AuthContext';
-import { ThemeProvider } from '@/contexts/ThemeContext';
 import { useReactQuerySetup } from '@/hooks/use-react-query-setup';
+import { AuthProvider, useAuth } from '@/state/AuthContext';
+import { ThemeProvider } from '@/state/ThemeContext';
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { Provider as JotaiProvider } from 'jotai';
@@ -70,11 +69,9 @@ export default function RootLayout() {
       <JotaiProvider>
         <ThemeProvider>
           <AuthProvider>
-            <ActiveHouseholdProvider>
-              <PaperProvider>
-                <RootLayoutNav />
-              </PaperProvider>
-            </ActiveHouseholdProvider>
+            <PaperProvider>
+              <RootLayoutNav />
+            </PaperProvider>
           </AuthProvider>
         </ThemeProvider>
       </JotaiProvider>

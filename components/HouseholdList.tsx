@@ -1,8 +1,8 @@
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from '@/state/ThemeContext';
 import { AVATAR_COLORS, AVATAR_EMOJI, AvatarKey } from '@/utils/avatar';
 import React from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
-import { Badge, Card, Button, IconButton } from 'react-native-paper';
+import { Badge, Button, Card, IconButton } from 'react-native-paper';
 import ActionButton from './ActionButton';
 
 export type HouseholdSummary = {

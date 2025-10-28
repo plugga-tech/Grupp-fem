@@ -1,15 +1,16 @@
 import { getHouseholdMembers, householdKeys } from '@/api/household';
-import ActionButton from '@/components/ActionButton';
+import { currentHouseholdAtom } from '@/atoms';
 import AppHeader from '@/components/AppHeader';
-import { useActiveHousehold } from '@/contexts/ActiveHouseholdContext';
 import { useHouseholdMutations } from '@/hooks/useHouseholdMutations';
+import { useTheme } from '@/state/ThemeContext';
 import { AVATAR_COLORS, AVATAR_EMOJI, AvatarKey } from '@/utils/avatar';
 import { useQuery } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { getAuth } from 'firebase/auth';
+import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
-import { Badge, Card, IconButton, TextInput } from 'react-native-paper';
+import { Badge, Button, Card, IconButton, TextInput } from 'react-native-paper';
 
 const getAvatarEmoji = (key?: AvatarKey | null) => (key ? AVATAR_EMOJI[key] : '');
 const getAvatarColor = (key?: AvatarKey | null) => (key ? AVATAR_COLORS[key] : 'transparent');
@@ -17,8 +18,7 @@ const getAvatarColor = (key?: AvatarKey | null) => (key ? AVATAR_COLORS[key] : '
 export default function HouseholdInfoScreen() {
   const router = useRouter();
   const { id, name, code } = useLocalSearchParams<{ id: string; name: string; code: string }>();
-
-  // TODO lägga till darkmode auto
+  const { colors } = useTheme();
 
   const {
     data: members = [],
@@ -32,12 +32,15 @@ export default function HouseholdInfoScreen() {
 
   const userId = getAuth().currentUser?.uid;
 
-  const { removeMemberMutation, renameHouseholdMutation } = useHouseholdMutations(userId ?? '');
+  const { removeMemberMutation, renameHouseholdMutation, deleteHouseholdMutation } = useHouseholdMutations(userId ?? '');
 
-  const { setActiveHouseholdId, activeHouseholdId } = useActiveHousehold();
+  const [currentHousehold, setCurrentHousehold] = useAtom(currentHouseholdAtom);
+  const activeHouseholdId = currentHousehold?.id ?? null;
 
   const currentMember = members.find((m) => m.userId === userId);
   const canEdit = currentMember?.isAdmin ?? false;
+
+  const isOwner = canEdit;
 
   const [householdName, setHouseholdName] = useState(name);
   const [isEditing, setIsEditing] = useState(false);
@@ -66,7 +69,7 @@ export default function HouseholdInfoScreen() {
             {
               onSuccess: () => {
                 if (memberId === activeHouseholdId) {
-                  setActiveHouseholdId(null);
+                  setCurrentHousehold(null);
                 }
               },
             },
@@ -75,8 +78,34 @@ export default function HouseholdInfoScreen() {
     ]);
   };
 
+  const handleDeleteHousehold = () => {
+    if (!id || !isOwner) return;
+    Alert.alert(
+      'Ta bort hushåll',
+      `Är du säker på att du vill ta bort "${name}"? Detta tar bort alla medlemmar och kan inte ångras.`,
+      [
+        { text: 'Avbryt', style: 'cancel' },
+        {
+          text: 'Ta bort hushåll',
+          style: 'destructive',
+          onPress: () =>
+            deleteHouseholdMutation.mutate(id, {
+              onSuccess: () => {
+                // Clear current household if it was the active one
+                if (id === activeHouseholdId) {
+                  setCurrentHousehold(null);
+                }
+                // Navigate back to household list
+                router.back();
+              },
+            }),
+        },
+      ],
+    );
+  };
+
   return (
-    <View style={{ flex: 1, paddingTop: 2 }}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <AppHeader
         leftAction={{ icon: 'arrow-left', onPress: () => router.back() }}
@@ -88,62 +117,99 @@ export default function HouseholdInfoScreen() {
           isEditing ? (
             <TextInput
               mode="flat"
-              style={styles.titleInput}
+              style={[
+                styles.titleInput,
+                { backgroundColor: colors.surface, color: colors.text }
+              ]}
               value={householdName ?? ''}
               onChangeText={setHouseholdName}
               autoFocus
               returnKeyType="done"
               onSubmitEditing={handleToggleEdit}
               placeholder="Namn på hushållet"
+              placeholderTextColor={colors.textSecondary}
             />
           ) : undefined
         }
       />
 
-      <Card style={styles.infoCard}>
-        <Card.Content>
-          <Text>Code: </Text>
-          <Text>{code}</Text>
-        </Card.Content>
-      </Card>
+      <View style={styles.content}>
+        <Card style={[styles.infoCard, { backgroundColor: colors.card }]}>
+          <Card.Content>
+            <Text style={{ color: colors.text }}>Code: </Text>
+            <Text style={{ color: colors.text }}>{code}</Text>
+          </Card.Content>
+        </Card>
 
-      <Card style={styles.infoCard}>
-        <Card.Title title="Medlemmar" />
-        <Card.Content>
-          {isLoading && <Text>Laddar medlemmar…</Text>}
-          {error && <Text>Kunde inte hämta medlemmar.</Text>}
-          {!isLoading &&
-            members.map((member, index) => (
-              <View key={`${member.name ?? 'member'}-${index}`} style={styles.memberRow}>
-                {isEditing && member.userId !== userId && (
-                  <IconButton
-                    icon="trash-can-outline"
-                    onPress={() => handleRemoveMember(member.userId)}
-                    accessibilityLabel={`Ta bort ${member.name ?? 'denna medlem'}`}
-                  />
-                )}
+        <Card style={[styles.infoCard, { backgroundColor: colors.card }]}>
+          <Card.Title title="Medlemmar" titleStyle={{ color: colors.text }} />
+          <Card.Content>
+            {isLoading && <Text style={{ color: colors.text }}>Laddar medlemmar…</Text>}
+            {error && <Text style={{ color: colors.text }}>Kunde inte hämta medlemmar.</Text>}
+            {!isLoading &&
+              members.map((member, index) => (
+                <View key={`${member.name ?? 'member'}-${index}`} style={styles.memberRow}>
+                  {isEditing && member.userId !== userId && (
+                    <IconButton
+                      icon="trash-can-outline"
+                      onPress={() => handleRemoveMember(member.userId)}
+                      accessibilityLabel={`Ta bort ${member.name ?? 'denna medlem'}`}
+                      iconColor={colors.text}
+                    />
+                  )}
 
-                <View style={styles.memberAvatar}>
-                  <Badge
-                    size={24}
-                    style={[styles.memberBadge, { backgroundColor: getAvatarColor(member.avatar) }]}
-                  >
-                    {getAvatarEmoji(member.avatar)}
-                  </Badge>
+                  <View style={styles.memberAvatar}>
+                    <Badge
+                      size={24}
+                      style={[styles.memberBadge, { backgroundColor: getAvatarColor(member.avatar) }]}
+                    >
+                      {getAvatarEmoji(member.avatar)}
+                    </Badge>
+                  </View>
+                  <View style={styles.memberInfo}>
+                    <Text style={[styles.memberName, { color: colors.text }]}>
+                      {member.name ?? 'Okänd medlem'}
+                    </Text>
+                    {member.isAdmin && (
+                      <Text style={[styles.adminBadge, { color: colors.textSecondary }]}>
+                        Admin
+                      </Text>
+                    )}
+                  </View>
                 </View>
-                <View style={styles.memberInfo}>
-                  <Text style={styles.memberName}>{member.name ?? 'Okänd medlem'}</Text>
-                  {member.isAdmin && <Text style={styles.adminBadge}>Admin</Text>}
-                </View>
-              </View>
-            ))}
-        </Card.Content>
-      </Card>
+              ))}
+          </Card.Content>
+        </Card>
+      </View>
+
+      {isOwner && (
+        <View style={styles.deleteButtonContainer}>
+          <Button
+            mode="contained"
+            onPress={handleDeleteHousehold}
+            style={styles.deleteButton}
+            buttonColor="#FF3B30"
+            textColor="#FFFFFF"
+            loading={deleteHouseholdMutation.isPending}
+            disabled={deleteHouseholdMutation.isPending}
+          >
+            Ta bort hushåll
+          </Button>
+        </View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingTop: 2,
+  },
+  content: {
+    flex: 1,
+    paddingBottom: 90,
+  },
   titleContainer: {
     flex: 1,
     paddingTop: 2,
@@ -153,7 +219,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 8,
-    backgroundColor: 'rgba(0,0,0,0.08)',
     textAlign: 'center',
     fontSize: 18,
   },
@@ -181,6 +246,15 @@ const styles = StyleSheet.create({
   },
   adminBadge: {
     fontSize: 12,
-    color: '#888',
+  },
+  deleteButtonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 16,
+  },
+  deleteButton: {
+    marginTop: 0,
   },
 });

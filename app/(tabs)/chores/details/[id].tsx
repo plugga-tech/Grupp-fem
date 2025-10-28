@@ -3,60 +3,52 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { IconButton } from 'react-native-paper';
-import { completeChore, deleteChore, getChoresWithStatus } from '../../../../api/chores';
-import { currentHouseholdAtom, currentUserAtom } from '../../../../atoms';
+import { completeChore, getChoresWithStatus } from '../../../../api/chores';
+import { getHouseholdMembers, householdKeys } from '@/api/household';
+import { getAuth } from 'firebase/auth';
+import { currentHouseholdAtom } from '../../../../atoms';
+import AppHeader from '@/components/AppHeader';
 
 export default function ChoreDetailsScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const queryClient = useQueryClient();
   const [currentHousehold] = useAtom(currentHouseholdAtom);
-  const [currentUser] = useAtom(currentUserAtom);
-  const [showDeleteToast, setShowDeleteToast] = useState(false);
+  const activeHouseholdId = currentHousehold?.id ?? null;
+  const [showCompleteToast, setShowCompleteToast] = useState(false);
+// Hämta current user från Firebase Auth
+  const auth = getAuth();
+  const userId = auth.currentUser?.uid;
+// Hämta household members för att kolla om användaren är admin
+  const { data: members = [] } = useQuery({
+    queryKey: householdKeys.members(activeHouseholdId || ''),
+    queryFn: () => getHouseholdMembers(activeHouseholdId || ''),
+    enabled: !!activeHouseholdId,
+  });
+  // Kolla om current user är admin
+  const currentMember = members.find((m) => m.userId === userId);
+  const isAdmin = currentMember?.isAdmin ?? false;
 
   const { data: chores, isLoading } = useQuery({
-    queryKey: ['chores', currentHousehold?.id],
-    queryFn: () => getChoresWithStatus(currentHousehold?.id || ''),
-    enabled: !!currentHousehold?.id,
+    queryKey: ['chores', activeHouseholdId],
+    queryFn: () => getChoresWithStatus(activeHouseholdId || ''),
+    enabled: !!activeHouseholdId,
   });
 
   const chore = chores?.find((c) => c.id === id);
 
-  // Kolla om användaren har gjort sysslan idag
-  const isCompletedToday = chore?.last_completed_at 
-    ? Math.floor((Date.now() - chore.last_completed_at.getTime()) / (1000 * 60 * 60 * 24)) === 0
-    : false;
-
   const completeMutation = useMutation({
-    mutationFn: () => completeChore(
-      id as string,
-      currentHousehold?.id || '',
-      currentUser?.id || ''
-    ),
+    mutationFn: () => completeChore(id as string, activeHouseholdId || '', userId || ''),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chores'] });
+      setShowCompleteToast(true);
       setTimeout(() => {
-        router.push('/chores');
+        setShowCompleteToast(false);
+        router.push('/(tabs)/chores');
       }, 2000);
     },
     onError: (error) => {
       console.error('Error completing chore:', error);
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: () => deleteChore(id as string),
-    onSuccess: () => {
-      setShowDeleteToast(true);
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['chores'] });
-        setShowDeleteToast(false);
-        router.replace('/chores');
-      }, 2000);
-    },
-    onError: (error) => {
-      console.error('Error deleting chore:', error);
     },
   });
 
@@ -78,38 +70,17 @@ export default function ChoreDetailsScreen() {
 
   return (
     <View style={styles.container}>
-
-      <View style={styles.header}>
-        <IconButton 
-          icon="arrow-left" 
-          size={24}
-          onPress={() => router.push('/chores')}
-          style={{ margin: 0 }}
-        />
-        <Text style={styles.headerTitle}>Sysslans information</Text>
-        
-        {isCompletedToday ? (
-          <IconButton 
-            icon="delete-outline"
-            size={24}
-            onPress={() => deleteMutation.mutate()}
-            style={{ margin: 0 }}
-            iconColor="#CD5D6F"
-            disabled={deleteMutation.isPending}
-          />
-        ) : (
-          <IconButton 
-            icon="lead-pencil"
-            size={24}
-            onPress={() => router.push(`/chores/edit/${chore.id}`)}
-            style={{ margin: 0 }}
-            iconColor="#4A90E2"
-          />
-        )}
-      </View>
+      <AppHeader
+        title="Sysslans information"
+        leftAction={{ icon: 'arrow-left', onPress: () => router.back() }}
+        rightActions={
+          isAdmin
+            ? [{ icon: 'pen', onPress: () => router.push(`/chores/edit/${chore.id}`) }]
+            : undefined
+        }
+      />
 
       <ScrollView style={styles.content}>
-
         <View style={styles.card}>
           <Text style={styles.choreName}>{chore.name}</Text>
         </View>
@@ -122,10 +93,12 @@ export default function ChoreDetailsScreen() {
           <Text style={styles.infoLabel}>Återkommer:</Text>
           <View style={styles.frequencyContainer}>
             <Text style={styles.varText}>var</Text>
-            <View style={[
-              styles.numberBadge,
-              chore.is_overdue ? styles.numberBadgeRed : styles.numberBadgeGreen
-            ]}>
+            <View
+              style={[
+                styles.numberBadge,
+                chore.is_overdue ? styles.numberBadgeRed : styles.numberBadgeGreen,
+              ]}
+            >
               <Text style={styles.numberBadgeText}>{chore.frequency}</Text>
             </View>
             <Text style={styles.varText}>dag</Text>
@@ -143,27 +116,21 @@ export default function ChoreDetailsScreen() {
         </View>
       </ScrollView>
 
-      {isCompletedToday ? (
-        <View style={styles.completedContainer}>
-          <Text style={styles.completedText}>✅ Sysslan är markerad som gjord!</Text>
-        </View>
-      ) : (
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.completeButton}
-            onPress={() => completeMutation.mutate()}
-            disabled={completeMutation.isPending}
-          >
-            <Text style={styles.completeButtonText}>
-              {completeMutation.isPending ? 'Markerar...' : 'Markera som gjord ✓'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={styles.completeButton}
+          onPress={() => completeMutation.mutate()}
+          disabled={completeMutation.isPending}
+        >
+          <Text style={styles.completeButtonText}>
+            {completeMutation.isPending ? 'Markerar...' : 'Markera som gjord ✓'}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-      {showDeleteToast && (
-        <View style={styles.deleteToast}>
-          <Text style={styles.deleteToastText}>🗑️ Sysslan är borttagen!</Text>
+      {showCompleteToast && (
+        <View style={styles.completeToast}>
+          <Text style={styles.completeToastText}>✅ Sysslan är markerad som gjord!</Text>
         </View>
       )}
     </View>
@@ -178,21 +145,6 @@ const styles = StyleSheet.create({
   center: {
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 24,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000',
   },
   content: {
     flex: 1,
@@ -272,17 +224,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
-  completedContainer: {
-    backgroundColor: '#E8F5E9',
-    padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  completedText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2E7D32',
-  },
   buttonContainer: {
     padding: 16,
     backgroundColor: '#F5F5F5',
@@ -304,12 +245,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
-  deleteToast: {
+  completeToast: {
     position: 'absolute',
     bottom: 80,
     left: 20,
     right: 20,
-    backgroundColor: '#FFEBEE',
+    backgroundColor: '#E8F5E9',
     padding: 16,
     borderRadius: 12,
     flexDirection: 'row',
@@ -321,19 +262,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
-  deleteToastText: {
+  completeToastText: {
     fontSize: 16,
-    color: '#C62828',
+    color: '#2E7D32',
     fontWeight: '600',
-  },
-  errorText: {
-    fontSize: 18,
-    color: '#CD5D6F',
-    marginBottom: 16,
-  },
-  backLink: {
-    fontSize: 16,
-    color: '#4A90E2',
-    textDecorationLine: 'underline',
   },
 });

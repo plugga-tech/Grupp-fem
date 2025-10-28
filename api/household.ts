@@ -265,14 +265,8 @@ export async function updateUserAvatar(
   });
 }
 
-/**
- * Remove a user from a household
- * @param userId - User's ID
- * @param householdId - Household ID to leave
- * @returns Promise<void>
- */
+
 export async function leaveHousehold(userId: string, householdId: string): Promise<void> {
-  // Find user's membership in the specific household
   const memberQuery = query(
     collection(db, 'member'),
     where('user_id', '==', userId),
@@ -287,7 +281,6 @@ export async function leaveHousehold(userId: string, householdId: string): Promi
   const memberDoc = memberSnapshot.docs[0];
   const memberData = memberDoc.data();
 
-  // Check if user is the owner
   const householdRef = doc(db, 'household', householdId);
   const householdDoc = await getDoc(householdRef);
 
@@ -300,13 +293,11 @@ export async function leaveHousehold(userId: string, householdId: string): Promi
     }
   }
 
-  // Remove membership
   await updateDoc(memberDoc.ref, {
     // Instead of deleting, we could mark as inactive
     // For now, let's just delete the document
   });
 
-  // Actually delete the membership document
   const batch = writeBatch(db);
   batch.delete(memberDoc.ref);
   await batch.commit();
@@ -340,5 +331,32 @@ export async function removeMember(
 
   const batch = writeBatch(db);
   batch.delete(targetSnap.docs[0].ref);
+  await batch.commit();
+}
+
+export async function deleteHousehold(householdId: string, userId: string): Promise<void> {
+  const householdRef = doc(db, 'household', householdId);
+  const householdDoc = await getDoc(householdRef);
+
+  if (!householdDoc.exists()) {
+    throw new Error('Hushållet hittades inte');
+  }
+
+  const householdData = householdDoc.data();
+  if (householdData.owner_id !== userId) {
+    throw new Error('Endast ägaren kan ta bort hushållet');
+  }
+
+  const membersQuery = query(collection(db, 'member'), where('household_id', '==', householdId));
+  const membersSnapshot = await getDocs(membersQuery);
+
+  const batch = writeBatch(db);
+
+  membersSnapshot.docs.forEach((memberDoc) => {
+    batch.delete(memberDoc.ref);
+  });
+
+  batch.delete(householdRef);
+
   await batch.commit();
 }
