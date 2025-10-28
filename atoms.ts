@@ -1,5 +1,4 @@
 import { atom } from 'jotai';
-import { UserHousehold } from '@/api/user';
 
 export interface User {
   id: string;

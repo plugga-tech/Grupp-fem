@@ -19,13 +19,13 @@ import {
   leaveHousehold,
   updateUserAvatar,
 } from '../../../api/household';
-import { getUserHouseholds, updateUserDisplayName } from '../../../api/user';
+import { getUserHouseholds, updateUserDisplayName, UserHousehold } from '../../../api/user';
 import { useAuth } from '../../../state/AuthContext';
 import { ThemeMode, useTheme } from '../../../state/ThemeContext';
 import { AvatarKey, getAvatarInfo } from '../../../utils/avatar';
 
 export default function ProfileScreen() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const router = useRouter();
   const [selectedHousehold, setSelectedHousehold] = useAtom(currentHouseholdAtom);
 
@@ -57,7 +57,7 @@ export default function ProfileScreen() {
     enabled: !!user?.uid,
   });
 
-  const activeHousehold = selectedHousehold ?? households[0] ?? null;
+  const activeHousehold = (selectedHousehold ?? households[0] ?? null) as UserHousehold | null;
   const activeHouseholdId = activeHousehold?.id ?? null;
 
   const { data: availableAvatars = [] } = useQuery({
@@ -191,6 +191,28 @@ export default function ProfileScreen() {
           text: 'Lämna',
           style: 'destructive',
           onPress: () => activeHousehold.id && leaveHouseholdMutation.mutate(activeHousehold.id),
+        },
+      ],
+    );
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Logga ut',
+      'Är du säker på att du vill logga ut?',
+      [
+        { text: 'Avbryt', style: 'cancel' },
+        {
+          text: 'Logga ut',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await logout();
+              router.replace('/sign-in');
+            } catch (error) {
+              Alert.alert('Fel', 'Kunde inte logga ut. Försök igen.');
+            }
+          },
         },
       ],
     );
@@ -341,6 +363,17 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             ))}
           </View>
+        </View>
+
+        <View style={styles.section}>
+          <TouchableOpacity
+            style={[styles.logoutButton, { backgroundColor: colors.surface }]}
+            onPress={handleLogout}
+          >
+            <Text style={[styles.logoutButtonText, { color: '#FF3B30' }]}>
+              Logga ut
+            </Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.bottomSpacing} />
@@ -757,5 +790,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     marginTop: 2,
+  },
+  logoutButton: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  logoutButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FF3B30',
   },
 });
