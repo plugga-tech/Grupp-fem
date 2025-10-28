@@ -1,15 +1,15 @@
-import { ChoreCompletion, getCompletionsByRange } from "@/api/chores";
+import { computeStats, type StatsBundle } from "@/api/stats";
+import { currentHouseholdAtom } from "@/atoms";
 import AppHeader from "@/components/AppHeader";
 import PeriodPicker, {
   getPeriodRange,
   PeriodPickerValue,
 } from "@/components/stats/PeriodPicker";
 import { useTheme } from "@/state/ThemeContext";
+import { useAtomValue } from "jotai";
 import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Card, Text } from "react-native-paper";
-import { useAtomValue } from "jotai";
-import { currentHouseholdAtom } from "@/atoms";
 
 export default function StatScreen() {
   const { colors } = useTheme();
@@ -22,35 +22,31 @@ export default function StatScreen() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [completions, setCompletions] = useState<ChoreCompletion[]>([]);
+  const [stats, setStats] = useState<StatsBundle | null>(null);
 
   const range = getPeriodRange(period.mode, period.anchor);
 
   useEffect(() => {
     const fetchData = async () => {
       if (!activeHouseholdId) {
-        setCompletions([]);
+        setStats(null);
         console.log("[stats] Ingen aktiv household vald ännu.");
         return;
       }
 
       setLoading(true);
       try {
-        const data = await getCompletionsByRange(
-          activeHouseholdId,
-          range.from,
-          range.to
-        );
-        setCompletions(data);
-
+        const s = await computeStats(activeHouseholdId, range.from, range.to);
+        setStats(s);
         console.log(
           `[stats] Hushåll: ${activeHouseholdId}` +
             `\nPeriod: ${range.from.toISOString()} – ${range.to.toISOString()}` +
-            `\nAntal completions: ${data.length}`
+            `\nTotalt-slices: ${s.total.length}, Sysslor: ${s.chores.length}`
         );
-        if (data[0]) console.log("[stats] Första completion:", data[0]);
+        if (s.total[0]) console.log("[stats] Första totalslice:", s.total[0]);
+        if (s.chores[0]) console.log("[stats] Första sysslan:", s.chores[0]);
       } catch (error) {
-        console.error("[stats] Fel vid hämtning av completions:", error);
+        console.error("[stats] computeStats failed:", error);
       } finally {
         setLoading(false);
       }
@@ -140,11 +136,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     rowGap: 12,
   },
-  smallCard: {
-    width: "31%",
-    borderRadius: 16,
-    paddingVertical: 12,
-  },
+  smallCard: { width: "31%", borderRadius: 16, paddingVertical: 12 },
   smallCircle: {
     width: 70,
     height: 70,
