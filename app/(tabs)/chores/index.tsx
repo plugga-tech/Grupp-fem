@@ -201,12 +201,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     elevation: 2,
+    minHeight: 60,
   },
   cardContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 8,
+    minHeight: 60,
   },
   choreName: {
     fontSize: 18,
