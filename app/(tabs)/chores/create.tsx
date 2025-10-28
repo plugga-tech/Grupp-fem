@@ -1,28 +1,16 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
+import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { IconButton } from 'react-native-paper';
 import { choreKeys, createChore } from '../../../api/chores';
-import { useActiveHousehold } from '@/contexts/ActiveHouseholdContext';
-import { getHouseholds, householdKeys } from '@/api/household';
-import { getAuth } from 'firebase/auth';
+import { currentHouseholdAtom } from '../../../atoms';
 
 export default function CreateChoreScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { activeHouseholdId } = useActiveHousehold();
-  const auth = getAuth();
-  const userId = auth.currentUser?.uid;
-
-  // Hämta household info för att visa namnet
-  const { data: households = [] } = useQuery({
-    queryKey: householdKeys.list(userId || ''),
-    queryFn: () => getHouseholds(userId!),
-    enabled: !!userId,
-  });
-
-  const activeHousehold = households.find(h => h.id === activeHouseholdId);
+  const [currentHousehold] = useAtom(currentHouseholdAtom);
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -56,13 +44,13 @@ export default function CreateChoreScreen() {
       return;
     }
 
-    if (!activeHouseholdId) {
+    if (!currentHousehold?.id) {
       Alert.alert('Fel', 'Inget hushåll valt');
       return;
     }
 
     mutation.mutate({
-      household_id: activeHouseholdId,
+      household_id: currentHousehold.id,
       name: name.trim(),
       description: description.trim(),
       frequency: frequency,
@@ -133,7 +121,6 @@ export default function CreateChoreScreen() {
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Frequency Picker Modal */}
       <Modal
         visible={showFrequencyPicker}
         transparent={true}
@@ -177,7 +164,6 @@ export default function CreateChoreScreen() {
         </TouchableOpacity>
       </Modal>
 
-      {/* Weight Picker Modal */}
       <Modal
         visible={showWeightPicker}
         transparent={true}
