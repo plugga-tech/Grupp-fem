@@ -3,9 +3,9 @@ import { useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { IconButton } from 'react-native-paper';
 import { choreKeys, createChore } from '../../../api/chores';
 import { currentHouseholdAtom } from '../../../atoms';
+import AppHeader from '@/components/AppHeader';
 
 export default function CreateChoreScreen() {
   const router = useRouter();
@@ -63,16 +63,9 @@ export default function CreateChoreScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <IconButton
-          icon="arrow-left"
-          size={24}
-          onPress={() => router.back()}
-          style={{ margin: 0 }}
-        />
-        <Text style={styles.headerTitle}>Skapa ny syssla</Text>
-        <View style={{ width: 48 }} />
-      </View>
+      <AppHeader
+        title="Skapa ny syssla"
+      />
 
       <ScrollView style={styles.form}>
         <TextInput
@@ -239,21 +232,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 24,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  headerTitle: {
-    fontSize: 23,
-    fontWeight: '600',
-    color: '#000',
   },
   form: {
     flex: 1,

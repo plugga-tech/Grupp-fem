@@ -3,9 +3,9 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { IconButton } from 'react-native-paper';
 import { deleteChore, getChoresWithStatus, updateChore } from '../../../../api/chores';
 import { currentHouseholdAtom } from '../../../../atoms';
+import AppHeader from '@/components/AppHeader';
 
 export default function EditChoreScreen() {
   const router = useRouter();
@@ -110,18 +110,13 @@ export default function EditChoreScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={{ width: 48 }} />
-        <Text style={styles.headerTitle}>Ändra syssla</Text>
-        <IconButton 
-          icon="delete-outline" 
-          size={24}
-          onPress={handleDelete}
-          style={{ margin: 0 }}
-          iconColor="#CD5D6F"
-          disabled={deleteMutation.isPending}
-        />
-      </View>
+      <AppHeader
+        title="Ändra syssla"
+        rightActions={[{
+          icon: 'delete-outline',
+          onPress: handleDelete
+        }]}
+      />
 
       <ScrollView style={styles.form}>
         <TextInput
@@ -297,21 +292,6 @@ const styles = StyleSheet.create({
   center: {
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 24,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#000',
   },
   form: {
     flex: 1,
