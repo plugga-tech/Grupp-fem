@@ -51,7 +51,7 @@ export default function ChoreDetailsScreen() {
       setShowCompleteToast(true);
       setTimeout(() => {
         setShowCompleteToast(false);
-        router.back();
+        router.push('/(tabs)/chores'); 
       }, 2000);
     },
     onError: (error) => {
@@ -81,7 +81,7 @@ export default function ChoreDetailsScreen() {
         <IconButton 
           icon="arrow-left" 
           size={24}
-          onPress={() => router.back()}
+          onPress={() => router.push('/(tabs)/chores')} 
           style={{ margin: 0 }}
         />
         <Text style={styles.headerTitle}>Sysslans information</Text>
