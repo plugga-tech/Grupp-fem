@@ -3,57 +3,52 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { IconButton } from 'react-native-paper';
-import { completeChore, deleteChore, getChoresWithStatus } from '../../../../api/chores';
-import { currentHouseholdAtom, currentUserAtom } from '../../../../atoms';
+import { completeChore, getChoresWithStatus } from '../../../../api/chores';
+import { getHouseholdMembers, householdKeys } from '@/api/household';
+import { getAuth } from 'firebase/auth';
+import { currentHouseholdAtom } from '../../../../atoms';
+import AppHeader from '@/components/AppHeader';
 
 export default function ChoreDetailsScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const queryClient = useQueryClient();
   const [currentHousehold] = useAtom(currentHouseholdAtom);
-  const [currentUser] = useAtom(currentUserAtom);
-  const [showDeleteToast, setShowDeleteToast] = useState(false);
+  const activeHouseholdId = currentHousehold?.id ?? null;
   const [showCompleteToast, setShowCompleteToast] = useState(false);
+// Hämta current user från Firebase Auth
+  const auth = getAuth();
+  const userId = auth.currentUser?.uid;
+// Hämta household members för att kolla om användaren är admin
+  const { data: members = [] } = useQuery({
+    queryKey: householdKeys.members(activeHouseholdId || ''),
+    queryFn: () => getHouseholdMembers(activeHouseholdId || ''),
+    enabled: !!activeHouseholdId,
+  });
+  // Kolla om current user är admin
+  const currentMember = members.find((m) => m.userId === userId);
+  const isAdmin = currentMember?.isAdmin ?? false;
 
   const { data: chores, isLoading } = useQuery({
-    queryKey: ['chores', currentHousehold?.id],
-    queryFn: () => getChoresWithStatus(currentHousehold?.id || ''),
-    enabled: !!currentHousehold?.id,
+    queryKey: ['chores', activeHouseholdId],
+    queryFn: () => getChoresWithStatus(activeHouseholdId || ''),
+    enabled: !!activeHouseholdId,
   });
 
   const chore = chores?.find((c) => c.id === id);
 
   const completeMutation = useMutation({
-    mutationFn: () => completeChore(
-      id as string,
-      currentHousehold?.id || '',
-      currentUser?.id || ''
-    ),
+    mutationFn: () => completeChore(id as string, activeHouseholdId || '', userId || ''),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chores'] });
       setShowCompleteToast(true);
       setTimeout(() => {
         setShowCompleteToast(false);
+        router.push('/(tabs)/chores');
       }, 2000);
     },
     onError: (error) => {
       console.error('Error completing chore:', error);
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: () => deleteChore(id as string),
-    onSuccess: () => {
-      setShowDeleteToast(true);
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['chores'] });
-        setShowDeleteToast(false);
-        router.replace('/chores');
-      }, 2000);
-    },
-    onError: (error) => {
-      console.error('Error deleting chore:', error);
     },
   });
 
@@ -75,27 +70,17 @@ export default function ChoreDetailsScreen() {
 
   return (
     <View style={styles.container}>
-
-      <View style={styles.header}>
-        <IconButton 
-          icon="arrow-left" 
-          size={24}
-          onPress={() => router.push('/chores')}
-          style={{ margin: 0 }}
-        />
-        <Text style={styles.headerTitle}>Sysslans information</Text>
-        
-        <IconButton 
-          icon="lead-pencil"
-          size={24}
-          onPress={() => router.push(`/chores/edit/${chore.id}`)}
-          style={{ margin: 0 }}
-          iconColor="#4A90E2"
-        />
-      </View>
+      <AppHeader
+        title="Sysslans information"
+        leftAction={{ icon: 'arrow-left', onPress: () => router.back() }}
+        rightActions={
+          isAdmin
+            ? [{ icon: 'pen', onPress: () => router.push(`/chores/edit/${chore.id}`) }]
+            : undefined
+        }
+      />
 
       <ScrollView style={styles.content}>
-
         <View style={styles.card}>
           <Text style={styles.choreName}>{chore.name}</Text>
         </View>
@@ -108,10 +93,12 @@ export default function ChoreDetailsScreen() {
           <Text style={styles.infoLabel}>Återkommer:</Text>
           <View style={styles.frequencyContainer}>
             <Text style={styles.varText}>var</Text>
-            <View style={[
-              styles.numberBadge,
-              chore.is_overdue ? styles.numberBadgeRed : styles.numberBadgeGreen
-            ]}>
+            <View
+              style={[
+                styles.numberBadge,
+                chore.is_overdue ? styles.numberBadgeRed : styles.numberBadgeGreen,
+              ]}
+            >
               <Text style={styles.numberBadgeText}>{chore.frequency}</Text>
             </View>
             <Text style={styles.varText}>dag</Text>
@@ -146,13 +133,6 @@ export default function ChoreDetailsScreen() {
           <Text style={styles.completeToastText}>✅ Sysslan är markerad som gjord!</Text>
         </View>
       )}
-
-
-      {showDeleteToast && (
-        <View style={styles.deleteToast}>
-          <Text style={styles.deleteToastText}>🗑️ Sysslan är borttagen!</Text>
-        </View>
-      )}
     </View>
   );
 }
@@ -165,21 +145,6 @@ const styles = StyleSheet.create({
   center: {
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 24,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000',
   },
   content: {
     flex: 1,
@@ -300,28 +265,6 @@ const styles = StyleSheet.create({
   completeToastText: {
     fontSize: 16,
     color: '#2E7D32',
-    fontWeight: '600',
-  },
-  deleteToast: {
-    position: 'absolute',
-    bottom: 80,
-    left: 20,
-    right: 20,
-    backgroundColor: '#FFEBEE',
-    padding: 16,
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  deleteToastText: {
-    fontSize: 16,
-    color: '#C62828',
     fontWeight: '600',
   },
 });

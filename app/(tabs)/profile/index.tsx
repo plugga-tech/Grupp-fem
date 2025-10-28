@@ -1,8 +1,12 @@
+import { currentHouseholdAtom } from '@/atoms';
+import AppHeader from '@/components/AppHeader';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
+import { useAtom } from 'jotai';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
+  Clipboard,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,21 +21,22 @@ import {
   leaveHousehold,
   updateUserAvatar,
 } from '../../../api/household';
-import { getUserHouseholds, updateUserDisplayName } from '../../../api/user';
-import { useActiveHousehold } from '../../../contexts/ActiveHouseholdContext';
-import { useAuth } from '../../../contexts/AuthContext';
-import { ThemeMode, useTheme } from '../../../contexts/ThemeContext';
+import { getUserHouseholds, updateUserDisplayName, UserHousehold } from '../../../api/user';
+import { useAuth } from '../../../state/AuthContext';
+import { ThemeMode, useTheme } from '../../../state/ThemeContext';
 import { AvatarKey, getAvatarInfo } from '../../../utils/avatar';
 
 export default function ProfileScreen() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const router = useRouter();
-  const { activeHouseholdId, setActiveHouseholdId } = useActiveHousehold();
+  const [selectedHousehold, setSelectedHousehold] = useAtom(currentHouseholdAtom);
+
   const { themeMode, setThemeMode, colors, isDark } = useTheme();
   const [name, setName] = useState(user?.displayName || '');
   const [selectedAvatar, setSelectedAvatar] = useState<AvatarKey | null>(null);
   const [showAvatarSelection, setShowAvatarSelection] = useState(false);
   const [showHouseholdSelection, setShowHouseholdSelection] = useState(false);
+  const [hasLeftHousehold, setHasLeftHousehold] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -55,28 +60,23 @@ export default function ProfileScreen() {
     enabled: !!user?.uid,
   });
 
-  const currentHousehold = activeHouseholdId
-    ? households.find((h) => h.id === activeHouseholdId)
-    : households[0];
-
-  useEffect(() => {
-    if (households.length > 0 && !activeHouseholdId) {
-      setActiveHouseholdId(households[0].id);
-    }
-  }, [households, activeHouseholdId, setActiveHouseholdId]);
+  const activeHousehold = (
+    hasLeftHousehold ? null : (selectedHousehold ?? households[0] ?? null)
+  ) as UserHousehold | null;
+  const activeHouseholdId = activeHousehold?.id ?? null;
 
   const { data: availableAvatars = [] } = useQuery({
-    queryKey: ['available-avatars', currentHousehold?.id],
-    queryFn: () => getAvailableAvatarsForHousehold(currentHousehold!.id),
-    enabled: !!currentHousehold?.id,
+    queryKey: ['available-avatars', activeHousehold?.id],
+    queryFn: () => getAvailableAvatarsForHousehold(activeHousehold!.id),
+    enabled: !!activeHousehold?.id,
   });
 
   const updateAvatarMutation = useMutation({
     mutationFn: (newAvatar: AvatarKey) => {
-      if (!currentHousehold?.id) {
+      if (!activeHousehold?.id) {
         throw new Error('Inget aktivt hushåll valt');
       }
-      return updateUserAvatar(user!.uid, currentHousehold.id, newAvatar);
+      return updateUserAvatar(user!.uid, activeHousehold.id, newAvatar);
     },
     onSuccess: () => {
       console.log('Avatar updated successfully, invalidating queries...');
@@ -125,7 +125,7 @@ export default function ProfileScreen() {
 
   const leaveHouseholdMutation = useMutation({
     mutationFn: (householdId: string) => leaveHousehold(user!.uid, householdId),
-    onSuccess: () => {
+    onSuccess: (_, householdId) => {
       queryClient.invalidateQueries({ queryKey: ['user-households'] });
 
       if (user?.uid) {
@@ -133,7 +133,13 @@ export default function ProfileScreen() {
         queryClient.invalidateQueries({ queryKey: householdKeys.all });
       }
 
-      setActiveHouseholdId(null);
+      // Clear selected household
+      setSelectedHousehold(null);
+      setHasLeftHousehold(true);
+
+      // The household will be automatically removed from the list after query invalidation
+      // and since hasLeftHousehold is true, no household will be shown as active
+
       Alert.alert('Framgång', 'Du har lämnat hushållet');
     },
     onError: (error) => {
@@ -142,13 +148,13 @@ export default function ProfileScreen() {
   });
 
   useEffect(() => {
-    if (currentHousehold?.currentUserMember?.avatar) {
-      setSelectedAvatar(currentHousehold.currentUserMember.avatar);
+    if (activeHousehold?.currentUserMember?.avatar) {
+      setSelectedAvatar(activeHousehold.currentUserMember.avatar);
     }
-  }, [currentHousehold?.id, currentHousehold?.currentUserMember?.avatar]);
+  }, [activeHousehold?.id, activeHousehold?.currentUserMember?.avatar]);
 
   const handleSaveAvatar = () => {
-    if (selectedAvatar && selectedAvatar !== currentHousehold?.currentUserMember?.avatar) {
+    if (selectedAvatar && selectedAvatar !== activeHousehold?.currentUserMember?.avatar) {
       updateAvatarMutation.mutate(selectedAvatar);
     } else {
       setShowAvatarSelection(false);
@@ -157,10 +163,11 @@ export default function ProfileScreen() {
 
   const handleHouseholdChange = (householdId: string) => {
     console.log('Changing household to:', householdId);
-    setActiveHouseholdId(householdId);
+
+    const newHousehold = households.find((h) => h.id === householdId) ?? null;
+    setSelectedHousehold(newHousehold);
     setShowHouseholdSelection(false);
 
-    const newHousehold = households.find((h) => h.id === householdId);
     console.log('New household:', newHousehold);
     if (newHousehold?.currentUserMember?.avatar) {
       setSelectedAvatar(newHousehold.currentUserMember.avatar);
@@ -171,36 +178,47 @@ export default function ProfileScreen() {
 
   const handleThemeChange = (theme: ThemeMode) => {
     setThemeMode(theme);
-    Alert.alert(
-      'Tema Uppdaterat',
-      `Tema ändrat till "${theme}"${theme === 'Auto' ? ' (följer system)' : ''}`,
-    );
   };
 
   const handleSwitchHousehold = () => {
+    setHasLeftHousehold(false); // Reset state when user wants to switch household
     router.push('/household');
   };
 
   const handleLeaveHousehold = () => {
-    if (!currentHousehold) {
+    if (!activeHousehold) {
       Alert.alert('Fel', 'Inget aktivt hushåll att lämna');
       return;
     }
-
     Alert.alert(
       'Lämna Hushåll',
-      `Är du säker på att du vill lämna "${currentHousehold.name}"? Denna åtgärd kan inte ångras.`,
+      `Är du säker på att du vill lämna "${activeHousehold.name}"? Denna åtgärd kan inte ångras.`,
       [
-        {
-          text: 'Avbryt',
-          style: 'cancel',
-        },
+        { text: 'Avbryt', style: 'cancel' },
         {
           text: 'Lämna',
           style: 'destructive',
-          onPress: () => {
-            if (currentHousehold.id) {
-              leaveHouseholdMutation.mutate(currentHousehold.id);
+          onPress: () => activeHousehold.id && leaveHouseholdMutation.mutate(activeHousehold.id),
+        },
+      ],
+    );
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Logga ut',
+      'Är du säker på att du vill logga ut?',
+      [
+        { text: 'Avbryt', style: 'cancel' },
+        {
+          text: 'Logga ut',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await logout();
+              router.replace('/sign-in');
+            } catch (error) {
+              Alert.alert('Fel', 'Kunde inte logga ut. Försök igen.');
             }
           },
         },
@@ -208,27 +226,30 @@ export default function ProfileScreen() {
     );
   };
 
-  const currentAvatarKey = currentHousehold?.currentUserMember?.avatar || 'Fox';
+  const handleCopyHouseholdCode = async () => {
+    if (!activeHousehold?.code) {
+      Alert.alert('Fel', 'Ingen hushållskod att kopiera');
+      return;
+    }
+
+    try {
+      await Clipboard.setString(activeHousehold.code);
+      Alert.alert('Kopierat!', `Hushållskod "${activeHousehold.code}" har kopierats till urklipp`);
+    } catch (error) {
+      Alert.alert('Fel', 'Kunde inte kopiera hushållskoden');
+    }
+  };
+
+  const currentAvatarKey = activeHousehold?.currentUserMember?.avatar ?? 'Fox';
+
   const currentAvatarInfo = getAvatarInfo(currentAvatarKey);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View
-        style={[
-          styles.header,
-          { backgroundColor: colors.header, borderBottomColor: colors.border },
-        ]}
-      >
-        <IconButton
-          icon="arrow-left"
-          size={24}
-          onPress={() => router.back()}
-          style={[styles.backButton, { backgroundColor: colors.surface }]}
-          iconColor={colors.text}
-        />
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Profil</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      <AppHeader
+        title="Profil"
+        leftAction={{ icon: 'chevron-left', onPress: () => router.back() }}
+      />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <TouchableOpacity style={styles.avatarSection} onPress={() => setShowAvatarSelection(true)}>
@@ -236,7 +257,7 @@ export default function ProfileScreen() {
             <Text style={styles.avatarEmoji}>{currentAvatarInfo.emoji}</Text>
           </View>
           <Text style={[styles.avatarName, { color: colors.text }]}>
-            {currentHousehold?.currentUserMember?.name || name}
+            {activeHousehold?.currentUserMember?.name || name}
           </Text>
           <Text style={[styles.changeAvatarText, { color: colors.textSecondary }]}>
             Tryck för att ändra avatar
@@ -287,20 +308,35 @@ export default function ProfileScreen() {
                   { backgroundColor: colors.surface, borderColor: colors.border },
                 ]}
               >
-                <Text style={[styles.householdName, { color: colors.text }]}>
-                  {currentHousehold?.name || 'Välj hushåll'}
-                </Text>
-                <Text style={[styles.householdCode, { color: colors.textSecondary }]}>
-                  Kod: {currentHousehold?.code || 'N/A'}
-                </Text>
-                <View style={styles.householdStatus}>
-                  <Text style={[styles.householdStatusText, { color: '#4CAF50' }]}>● Aktivt</Text>
+                <View style={styles.householdHeader}>
+                  <Text style={[styles.householdName, { color: colors.text }]}>
+                    {activeHousehold?.name || 'Välj hushåll'}
+                  </Text>
+                  <View style={styles.householdStatus}>
+                    <Text style={[styles.householdStatusText, { color: '#4CAF50' }]}>● Aktivt</Text>
+                  </View>
                 </View>
+                {activeHousehold?.code && (
+                  <TouchableOpacity
+                    style={[styles.householdCodeButton, {
+                      backgroundColor: colors.buttonSecondary,
+                      borderColor: colors.border
+                    }]}
+                    onPress={handleCopyHouseholdCode}
+                  >
+                    <Text style={[styles.householdCodeText, { color: colors.text }]}>
+                      Kod: {activeHousehold.code}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </>
           )}
 
-          <TouchableOpacity style={styles.actionButton} onPress={handleSwitchHousehold}>
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: colors.surface }]}
+            onPress={handleSwitchHousehold}
+          >
             <Text style={[styles.actionButtonText, { color: colors.buttonPrimary }]}>
               Byt hushåll
             </Text>
@@ -309,6 +345,7 @@ export default function ProfileScreen() {
           <TouchableOpacity
             style={[
               styles.actionButton,
+              { backgroundColor: colors.surface },
               leaveHouseholdMutation.isPending && styles.actionButtonDisabled,
             ]}
             onPress={handleLeaveHousehold}
@@ -352,6 +389,17 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             ))}
           </View>
+        </View>
+
+        <View style={styles.section}>
+          <TouchableOpacity
+            style={[styles.logoutButton, { backgroundColor: colors.surface }]}
+            onPress={handleLogout}
+          >
+            <Text style={[styles.logoutButtonText, { color: '#FF3B30' }]}>
+              Logga ut
+            </Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.bottomSpacing} />
@@ -478,34 +526,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 60,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  backButton: {
-    margin: 0,
-    backgroundColor: '#F8F9FA',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#000000',
-  },
-  headerSpacer: {
-    width: 40,
-  },
   content: {
     flex: 1,
     paddingHorizontal: 24,
@@ -575,29 +595,68 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginBottom: 12,
-    position: 'relative',
+  },
+  householdHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  householdInfoHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  householdInfoMain: {
+    flex: 1,
+    marginRight: 12,
   },
   householdName: {
     fontSize: 16,
     color: '#000000',
     fontWeight: '500',
+    flex: 1,
   },
   householdCode: {
     fontSize: 14,
     color: '#666666',
     marginTop: 2,
   },
+  householdCodeButton: {
+    backgroundColor: '#F0F2F5',
+    borderWidth: 1,
+    borderColor: '#E0E4E7',
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    alignSelf: 'flex-start',
+  },
+  householdCodeText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#000000',
+  },
   householdStatus: {
-    position: 'absolute',
-    top: 12,
-    right: 16,
+    alignItems: 'flex-end',
   },
   householdStatusText: {
     fontSize: 12,
     fontWeight: '600',
   },
+  copyButton: {
+    backgroundColor: '#2196F3',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
+  copyButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
   actionButton: {
-    backgroundColor: '#F8F9FA',
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -768,5 +827,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     marginTop: 2,
+  },
+  logoutButton: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  logoutButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FF3B30',
   },
 });
