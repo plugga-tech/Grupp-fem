@@ -4,15 +4,17 @@ import PeriodPicker, {
   getPeriodRange,
   PeriodPickerValue,
 } from "@/components/stats/PeriodPicker";
-import { useActiveHousehold } from "@/contexts/ActiveHouseholdContext";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme } from "@/state/ThemeContext";
 import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Card, Text } from "react-native-paper";
+import { useAtomValue } from "jotai";
+import { currentHouseholdAtom } from "@/atoms";
 
 export default function StatScreen() {
   const { colors } = useTheme();
-  const { activeHouseholdId } = useActiveHousehold();
+  const currentHousehold = useAtomValue(currentHouseholdAtom);
+  const activeHouseholdId = currentHousehold?.id ?? null;
 
   const [period, setPeriod] = useState<PeriodPickerValue>({
     mode: "week",
@@ -43,7 +45,7 @@ export default function StatScreen() {
 
         console.log(
           `[stats] Hushåll: ${activeHouseholdId}` +
-            `\nPeriod: ${range.from.toISOString()} → ${range.to.toISOString()}` +
+            `\nPeriod: ${range.from.toISOString()} – ${range.to.toISOString()}` +
             `\nAntal completions: ${data.length}`
         );
         if (data[0]) console.log("[stats] Första completion:", data[0]);
@@ -71,12 +73,10 @@ export default function StatScreen() {
       />
 
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Periodväljare */}
         <View style={styles.periodWrapper}>
           <PeriodPicker value={period} onChange={setPeriod} />
         </View>
 
-        {/* "Total"-pie placeholder */}
         <Card style={[styles.totalCard, { backgroundColor: colors.card }]}>
           <Card.Content style={styles.center}>
             <View style={[styles.bigCircle, { borderColor: colors.border }]} />
@@ -89,7 +89,6 @@ export default function StatScreen() {
           </Card.Content>
         </Card>
 
-        {/* “per syssla” placeholders */}
         <View style={styles.grid}>
           {[
             "Laga mat",
