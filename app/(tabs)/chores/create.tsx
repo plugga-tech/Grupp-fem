@@ -3,11 +3,9 @@ import { useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { IconButton } from 'react-native-paper';
-import { choreKeys, createChore } from '../../../api/chores';
 import { currentHouseholdAtom } from '../../../atoms';
 import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { choreKeys, createChore } from '../../../api/chores';
-import { currentHouseholdAtom } from '../../../atoms';
 import AppHeader from '@/components/AppHeader';
 import ActionButton from '@/components/ActionButton';
 

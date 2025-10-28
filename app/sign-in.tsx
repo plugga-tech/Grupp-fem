@@ -37,28 +37,17 @@ export default function SignInScreen() {
     Alert.alert('Info', 'Forgot password feature coming soon');
   };
 
-    return (
-        <View style={styles.container}>
-           {/* Logo Section */}
-<View style={styles.logoContainer}>
-    <Image
-        source={require('@/assets/images/logo.png')} // byt till din faktiska sökväg
-        style={styles.logo}
-        resizeMode="contain"
-    />
-</View>
-            {/* Title */}
-            <Text style={styles.title}>Hushållet</Text>
   return (
     <View style={styles.container}>
-      {/* Avatar Section */}
-      <View style={styles.avatarSection}>
-        <View style={styles.avatarContainer}>
-          <Text style={styles.avatar}>🦊</Text>
-        </View>
-        <View style={styles.avatarContainer}>
-          <Text style={styles.avatar}>🐙</Text>
-        </View>
+      {/* Logo Section */}
+      <View style={styles.logoContainer}>
+        <Image
+          // Byt sökväg om ditt alias @ inte pekar till projektroten:
+          // require('../assets/images/logo.png') eller ../../ beroende på var filen ligger
+          source={require('@/assets/images/logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
       </View>
 
       {/* Title */}
@@ -100,73 +89,6 @@ export default function SignInScreen() {
           Logga in
         </Button>
 
-                <Button
-                    mode="text"
-                    onPress={handleSignUp}
-                    style={styles.linkButton}
-                    labelStyle={styles.linkText}
-                >
-                    Skapa konto
-                </Button>
-            </View>
-        </View>
-    );
-}
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#FFFFFF',
-        paddingHorizontal: 32,
-        paddingTop: 80,
-    },
-    title: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginBottom: 48,
-        color: '#000000',
-    },
-    formContainer: {
-        gap: 16,
-    },
-    input: {
-        backgroundColor: '#F8F9FA',
-    },
-    inputOutline: {
-        borderColor: '#E9ECEF',
-        borderWidth: 1,
-    },
-    loginButton: {
-        marginTop: 16,
-        paddingVertical: 8,
-        backgroundColor: '#20B2AA',
-        borderRadius: 24,
-    },
-    loginButtonText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#FFFFFF',
-    },
-    linkButton: {
-        marginTop: 8,
-    },
-    linkText: {
-        fontSize: 14,
-        color: '#6C757D',
-    },
-    logoContainer: {
-    alignItems: 'center',
-    marginBottom: 32,
-    marginTop: 60, // flyttar ner loggan lite om den sitter för högt
-},
-logo: {
-    width: 180, // anpassa storlek efter hur stor du vill att loggan ska vara
-    height: 180,
-},
-
-
-});
         <Button
           mode="text"
           onPress={handleSignUp}
@@ -196,22 +118,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     paddingTop: 80,
   },
-  avatarSection: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 32,
-    gap: 16,
-  },
-  avatarContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#FFF0E6',
-    justifyContent: 'center',
+  logoContainer: {
     alignItems: 'center',
+    marginBottom: 32,
+    marginTop: 60, // justera om den sitter för högt/lågt
   },
-  avatar: {
-    fontSize: 32,
+  logo: {
+    width: 180,
+    height: 180,
   },
   title: {
     fontSize: 32,
