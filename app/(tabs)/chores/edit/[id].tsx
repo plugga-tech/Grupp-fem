@@ -1,17 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useAtom } from 'jotai';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { IconButton } from 'react-native-paper';
 import { deleteChore, getChoresWithStatus, updateChore } from '../../../../api/chores';
-import { currentHouseholdAtom } from '../../../../atoms';
+import { useActiveHousehold } from '@/contexts/ActiveHouseholdContext';
 
 export default function EditChoreScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const queryClient = useQueryClient();
-  const [currentHousehold] = useAtom(currentHouseholdAtom);
+  const { activeHouseholdId } = useActiveHousehold();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -23,9 +22,9 @@ export default function EditChoreScreen() {
   const [showDeleteToast, setShowDeleteToast] = useState(false);
 
   const { data: chores, isLoading } = useQuery({
-    queryKey: ['chores', currentHousehold?.id],
-    queryFn: () => getChoresWithStatus(currentHousehold?.id || ''),
-    enabled: !!currentHousehold?.id,
+    queryKey: ['chores', activeHouseholdId],
+    queryFn: () => getChoresWithStatus(activeHouseholdId || ''),
+    enabled: !!activeHouseholdId,
   });
 
   const chore = chores?.find((c) => c.id === id);
@@ -109,7 +108,6 @@ export default function EditChoreScreen() {
 
   return (
     <View style={styles.container}>
-
       <View style={styles.header}>
         <IconButton 
           icon="arrow-left" 
@@ -129,7 +127,6 @@ export default function EditChoreScreen() {
       </View>
 
       <ScrollView style={styles.form}>
-      
         <TextInput
           style={styles.input}
           placeholder="Titel"
