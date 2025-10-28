@@ -1,21 +1,21 @@
 import { getHouseholdMembers, householdKeys } from '@/api/household';
 import AppHeader from '@/components/AppHeader';
-import { useActiveHousehold } from '@/contexts/ActiveHouseholdContext';
-import { useTheme } from '@/contexts/ThemeContext';
 import { AVATAR_COLORS, AVATAR_EMOJI, AvatarKey } from '@/utils/avatar';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { getAuth } from 'firebase/auth';
+import { useAtom } from 'jotai';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Badge, Card, IconButton } from 'react-native-paper';
 import { choreKeys, getChoresWithStatus } from '../../../api/chores';
-import { currentHouseholdAtom, currentUserAtom } from '../../../atoms';
+import { currentHouseholdAtom } from '../../../atoms';
 
 export default function ChoreScreen() {
   const router = useRouter();
-  const { activeHouseholdId } = useActiveHousehold();
-  const { colors } = useTheme();
-
+  const [currentHousehold] = useAtom(currentHouseholdAtom);
+  const activeHouseholdId = currentHousehold?.id ?? null;
+  
+  // Hämta current user från Firebase Auth
   const auth = getAuth();
   const userId = auth.currentUser?.uid;
 
@@ -26,9 +26,10 @@ export default function ChoreScreen() {
     enabled: !!activeHouseholdId,
   });
 
+  // Kolla om current user är admin
   const currentMember = members.find(m => m.userId === userId);
   const canAddChore = currentMember?.isAdmin ?? false;
-
+ 
   const {
     data: chores,
     isLoading,
@@ -75,7 +76,7 @@ export default function ChoreScreen() {
 
   if (!activeHouseholdId) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.container}>
         <AppHeader
           title="Hemma"
           leftAction={{ icon: 'home-group', onPress: () => router.push('/(tabs)/household') }}
@@ -91,10 +92,10 @@ export default function ChoreScreen() {
     );
   }
 
-  const householdName = 'Mitt Hushåll';
+  const householdName = currentHousehold?.name ?? 'Mitt Hushåll';
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={styles.container}>
       <AppHeader
         title={householdName}
         leftAction={{ icon: 'home-group', onPress: () => router.push('/(tabs)/household') }}
@@ -104,7 +105,7 @@ export default function ChoreScreen() {
             : undefined
         }
       />
-      
+
       {!chores || chores.length === 0 ? (
         <View style={styles.emptyContainer}>
           <View style={styles.iconPlaceholder}>
@@ -117,7 +118,7 @@ export default function ChoreScreen() {
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
           {chores.map((chore) => {
             const hasAvatars = chore.completed_by_avatars && chore.completed_by_avatars.length > 0;
-
+            
             return (
               <TouchableOpacity
                 key={chore.id}
@@ -132,7 +133,6 @@ export default function ChoreScreen() {
                     <Text style={styles.choreName}>{chore.name}</Text>
 
                     {hasAvatars ? (
-                      // Visa riktiga user-avatarer
                       <View style={styles.avatarContainer}>
                         {chore.completed_by_avatars!.slice(0, 3).map((userId, index) => {
                           const { emoji, color } = getUserAvatar(userId);
@@ -155,7 +155,6 @@ export default function ChoreScreen() {
                         )}
                       </View>
                     ) : (
-          
                       <View
                         style={[
                           styles.dayBadge,
