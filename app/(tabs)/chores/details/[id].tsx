@@ -1,18 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { IconButton } from 'react-native-paper';
 import { completeChore, getChoresWithStatus } from '../../../../api/chores';
-import { useActiveHousehold } from '@/contexts/ActiveHouseholdContext';
 import { getHouseholdMembers, householdKeys } from '@/api/household';
 import { getAuth } from 'firebase/auth';
+import { currentHouseholdAtom } from '../../../../atoms';
 
 export default function ChoreDetailsScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const queryClient = useQueryClient();
-  const { activeHouseholdId } = useActiveHousehold();
+  const [currentHousehold] = useAtom(currentHouseholdAtom);
+  const activeHouseholdId = currentHousehold?.id ?? null;
   const [showCompleteToast, setShowCompleteToast] = useState(false);
 
   // Hämta current user från Firebase Auth
