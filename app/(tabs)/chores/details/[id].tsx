@@ -2,12 +2,20 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
 import { useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { IconButton } from 'react-native-paper';
 import { completeChore, getChoresWithStatus } from '../../../../api/chores';
 import { getHouseholdMembers, householdKeys } from '@/api/household';
 import { getAuth } from 'firebase/auth';
 import { currentHouseholdAtom } from '../../../../atoms';
+import AppHeader from '@/components/AppHeader';
 
 export default function ChoreDetailsScreen() {
   const router = useRouter();
@@ -29,7 +37,7 @@ export default function ChoreDetailsScreen() {
   });
 
   // Kolla om current user är admin
-  const currentMember = members.find(m => m.userId === userId);
+  const currentMember = members.find((m) => m.userId === userId);
   const isAdmin = currentMember?.isAdmin ?? false;
 
   const { data: chores, isLoading } = useQuery({
@@ -41,17 +49,13 @@ export default function ChoreDetailsScreen() {
   const chore = chores?.find((c) => c.id === id);
 
   const completeMutation = useMutation({
-    mutationFn: () => completeChore(
-      id as string,
-      activeHouseholdId || '',
-      userId || ''
-    ),
+    mutationFn: () => completeChore(id as string, activeHouseholdId || '', userId || ''),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chores'] });
       setShowCompleteToast(true);
       setTimeout(() => {
         setShowCompleteToast(false);
-        router.push('/(tabs)/chores'); 
+        router.push('/(tabs)/chores');
       }, 2000);
     },
     onError: (error) => {
@@ -77,27 +81,15 @@ export default function ChoreDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <IconButton 
-          icon="arrow-left" 
-          size={24}
-          onPress={() => router.push('/(tabs)/chores')} 
-          style={{ margin: 0 }}
-        />
-        <Text style={styles.headerTitle}>Sysslans information</Text>
-        
-        {isAdmin ? (
-          <IconButton 
-            icon="lead-pencil"
-            size={24}
-            onPress={() => router.push(`/chores/edit/${chore.id}`)}
-            style={{ margin: 0 }}
-            iconColor="#4A90E2"
-          />
-        ) : (
-          <View style={{ width: 48 }} />
-        )}
-      </View>
+      <AppHeader
+        title="Sysslans information"
+        leftAction={{ icon: 'arrow-left', onPress: () => router.back() }}
+        rightActions={
+          isAdmin
+            ? [{ icon: 'pen', onPress: () => router.push(`/chores/edit/${chore.id}`) }]
+            : undefined
+        }
+      />
 
       <ScrollView style={styles.content}>
         <View style={styles.card}>
@@ -112,10 +104,12 @@ export default function ChoreDetailsScreen() {
           <Text style={styles.infoLabel}>Återkommer:</Text>
           <View style={styles.frequencyContainer}>
             <Text style={styles.varText}>var</Text>
-            <View style={[
-              styles.numberBadge,
-              chore.is_overdue ? styles.numberBadgeRed : styles.numberBadgeGreen
-            ]}>
+            <View
+              style={[
+                styles.numberBadge,
+                chore.is_overdue ? styles.numberBadgeRed : styles.numberBadgeGreen,
+              ]}
+            >
               <Text style={styles.numberBadgeText}>{chore.frequency}</Text>
             </View>
             <Text style={styles.varText}>dag</Text>
@@ -162,21 +156,6 @@ const styles = StyleSheet.create({
   center: {
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 24,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000',
   },
   content: {
     flex: 1,

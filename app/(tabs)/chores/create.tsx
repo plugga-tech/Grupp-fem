@@ -2,10 +2,21 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
 import { useState } from 'react';
-import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { IconButton } from 'react-native-paper';
 import { choreKeys, createChore } from '../../../api/chores';
 import { currentHouseholdAtom } from '../../../atoms';
+import AppHeader from '@/components/AppHeader';
+import ActionButton from '@/components/ActionButton';
 
 export default function CreateChoreScreen() {
   const router = useRouter();
@@ -24,7 +35,7 @@ export default function CreateChoreScreen() {
     mutationFn: createChore,
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({
-        queryKey: choreKeys.list(variables.household_id)
+        queryKey: choreKeys.list(variables.household_id),
       });
       setShowSuccess(true);
       setTimeout(() => {
@@ -63,16 +74,10 @@ export default function CreateChoreScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <IconButton
-          icon="arrow-left"
-          size={24}
-          onPress={() => router.back()}
-          style={{ margin: 0 }}
-        />
-        <Text style={styles.headerTitle}>Skapa ny syssla</Text>
-        <View style={{ width: 48 }} />
-      </View>
+      <AppHeader
+        title="Skapa ny syssla"
+        leftAction={{ icon: 'arrow-left', onPress: () => router.back() }}
+      />
 
       <ScrollView style={styles.form}>
         <TextInput
@@ -93,10 +98,7 @@ export default function CreateChoreScreen() {
           placeholderTextColor="#C0C0C0"
         />
 
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() => setShowFrequencyPicker(true)}
-        >
+        <TouchableOpacity style={styles.card} onPress={() => setShowFrequencyPicker(true)}>
           <Text style={styles.cardLabel}>Återkommer:</Text>
           <View style={styles.frequencyContainer}>
             <Text style={styles.varText}>var</Text>
@@ -107,10 +109,7 @@ export default function CreateChoreScreen() {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() => setShowWeightPicker(true)}
-        >
+        <TouchableOpacity style={styles.card} onPress={() => setShowWeightPicker(true)}>
           <View>
             <Text style={styles.cardLabel}>Värde:</Text>
             <Text style={styles.cardSubtitle}>Hur energikrävande är sysslan?</Text>
@@ -146,15 +145,9 @@ export default function CreateChoreScreen() {
                     setFrequency(num);
                     setShowFrequencyPicker(false);
                   }}
-                  style={[
-                    styles.pickerItem,
-                    frequency === num && styles.pickerItemActive
-                  ]}
+                  style={[styles.pickerItem, frequency === num && styles.pickerItemActive]}
                 >
-                  <Text style={[
-                    styles.pickerText,
-                    frequency === num && styles.pickerTextActive
-                  ]}>
+                  <Text style={[styles.pickerText, frequency === num && styles.pickerTextActive]}>
                     {num}
                   </Text>
                 </TouchableOpacity>
@@ -185,15 +178,9 @@ export default function CreateChoreScreen() {
                     setWeight(num);
                     setShowWeightPicker(false);
                   }}
-                  style={[
-                    styles.weightPickerItem,
-                    weight === num && styles.weightPickerItemActive
-                  ]}
+                  style={[styles.weightPickerItem, weight === num && styles.weightPickerItemActive]}
                 >
-                  <Text style={[
-                    styles.pickerText,
-                    weight === num && styles.pickerTextActive
-                  ]}>
+                  <Text style={[styles.pickerText, weight === num && styles.pickerTextActive]}>
                     {num}
                   </Text>
                 </TouchableOpacity>
@@ -210,26 +197,28 @@ export default function CreateChoreScreen() {
       )}
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
+        <ActionButton
+          label={mutation.isPending ? 'Sparar…' : 'Spara'}
+          icon="plus"
+          onPress={() => {
+            if (!mutation.isPending) handleSave();
+          }}
+          backgroundColor="#4A90E2"
+          textColor="#fff"
           style={styles.saveButton}
-          onPress={handleSave}
-          disabled={mutation.isPending}
-        >
-          <View style={styles.circleIcon}>
-            <Text style={styles.plusIcon}>+</Text>
-          </View>
-          <Text style={styles.saveButtonText}>Spara</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+        />
+
+        <ActionButton
+          label="Stäng"
+          icon="close"
+          onPress={() => {
+            if (!mutation.isPending) router.back();
+          }}
+          backgroundColor="#fff"
+          textColor="#000"
+          iconColor="#000"
           style={styles.closeButton}
-          onPress={() => router.back()}
-          disabled={mutation.isPending}
-        >
-          <View style={[styles.circleIcon, styles.circleIconDark]}>
-            <Text style={[styles.plusIcon, styles.plusIconDark]}>×</Text>
-          </View>
-          <Text style={styles.closeButtonText}>Stäng</Text>
-        </TouchableOpacity>
+        />
       </View>
     </View>
   );
@@ -239,21 +228,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 24,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  headerTitle: {
-    fontSize: 23,
-    fontWeight: '600',
-    color: '#000',
   },
   form: {
     flex: 1,
@@ -325,11 +299,12 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: 'row',
-    padding: 0,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#F5F5F5',
+    columnGap: 12,
   },
+
   saveButton: {
     flex: 1,
     flexDirection: 'row',
@@ -337,6 +312,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
   },
   closeButton: {
     flex: 1,
@@ -345,8 +321,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    borderLeftWidth: 1,
-    borderLeftColor: '#E0E0E0',
+    borderWidth: 1,
   },
   circleIcon: {
     width: 24,
