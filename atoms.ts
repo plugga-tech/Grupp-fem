@@ -12,11 +12,5 @@ export interface Household {
   name?: string;
   code?: string;
 }
-
-export const currentUserAtom = atom<User | null>({
-  id: 'demo-user',
-  name: 'Demo User',
-  is_admin: true,
-});
-
-export const currentHouseholdAtom = atom<UserHousehold | null>(null);
+export const currentUserAtom = atom<User | null>(null);
+export const currentHouseholdAtom = atom<Household | null>(null);
