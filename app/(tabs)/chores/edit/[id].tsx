@@ -68,7 +68,7 @@ export default function EditChoreScreen() {
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ['chores'] });
         setShowDeleteToast(false);
-        router.replace('/chores');
+        router.replace('/(tabs)/chores');
       }, 2000);
     },
     onError: (error) => {
@@ -111,12 +111,7 @@ export default function EditChoreScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <IconButton 
-          icon="arrow-left" 
-          size={24}
-          onPress={() => router.back()}
-          style={{ margin: 0 }}
-        />
+        <View style={{ width: 48 }} />
         <Text style={styles.headerTitle}>Ändra syssla</Text>
         <IconButton 
           icon="delete-outline" 
