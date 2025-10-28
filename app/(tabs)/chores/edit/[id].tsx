@@ -2,10 +2,22 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { IconButton } from 'react-native-paper';
 import { deleteChore, getChoresWithStatus, updateChore } from '../../../../api/chores';
 import { currentHouseholdAtom } from '../../../../atoms';
 import AppHeader from '@/components/AppHeader';
+import ActionButton from '@/components/ActionButton';
 
 export default function EditChoreScreen() {
   const router = useRouter();
@@ -30,7 +42,7 @@ export default function EditChoreScreen() {
   });
 
   const chore = chores?.find((c) => c.id === id);
-  
+
   useEffect(() => {
     if (chore) {
       setName(chore.name);
@@ -41,12 +53,13 @@ export default function EditChoreScreen() {
   }, [chore]);
 
   const updateMutation = useMutation({
-    mutationFn: () => updateChore(id as string, {
-      name: name.trim(),
-      description: description.trim(),
-      frequency: frequency,
-      weight: weight,
-    }),
+    mutationFn: () =>
+      updateChore(id as string, {
+        name: name.trim(),
+        description: description.trim(),
+        frequency: frequency,
+        weight: weight,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chores'] });
       setShowSuccessToast(true);
@@ -112,10 +125,14 @@ export default function EditChoreScreen() {
     <View style={styles.container}>
       <AppHeader
         title="Ändra syssla"
-        rightActions={[{
-          icon: 'delete-outline',
-          onPress: handleDelete
-        }]}
+        leftAction={{ icon: 'arrow-left', onPress: () => router.back() }}
+        rightActions={[
+          {
+            icon: 'delete-outline',
+            onPress: handleDelete,
+            accessibilityLabel: 'Ta bort syssla',
+          },
+        ]}
       />
 
       <ScrollView style={styles.form}>
@@ -137,10 +154,7 @@ export default function EditChoreScreen() {
           placeholderTextColor="#C0C0C0"
         />
 
-        <TouchableOpacity 
-          style={styles.card}
-          onPress={() => setShowFrequencyPicker(true)}
-        >
+        <TouchableOpacity style={styles.card} onPress={() => setShowFrequencyPicker(true)}>
           <Text style={styles.cardLabel}>Återkommer:</Text>
           <View style={styles.frequencyContainer}>
             <Text style={styles.varText}>var</Text>
@@ -151,10 +165,7 @@ export default function EditChoreScreen() {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.card}
-          onPress={() => setShowWeightPicker(true)}
-        >
+        <TouchableOpacity style={styles.card} onPress={() => setShowWeightPicker(true)}>
           <View>
             <Text style={styles.cardLabel}>Värde:</Text>
             <Text style={styles.cardSubtitle}>Hur energikrävande är sysslan?</Text>
@@ -171,15 +182,15 @@ export default function EditChoreScreen() {
         animationType="fade"
         onRequestClose={() => setShowFrequencyPicker(false)}
       >
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
           onPress={() => setShowFrequencyPicker(false)}
         >
           <View style={styles.pickerContainer}>
             <Text style={styles.pickerTitle}>Återkommer väljare</Text>
-            <ScrollView 
-              horizontal 
+            <ScrollView
+              horizontal
               showsHorizontalScrollIndicator={false}
               style={styles.pickerScroll}
             >
@@ -190,15 +201,9 @@ export default function EditChoreScreen() {
                     setFrequency(num);
                     setShowFrequencyPicker(false);
                   }}
-                  style={[
-                    styles.pickerItem,
-                    frequency === num && styles.pickerItemActive
-                  ]}
+                  style={[styles.pickerItem, frequency === num && styles.pickerItemActive]}
                 >
-                  <Text style={[
-                    styles.pickerText,
-                    frequency === num && styles.pickerTextActive
-                  ]}>
+                  <Text style={[styles.pickerText, frequency === num && styles.pickerTextActive]}>
                     {num}
                   </Text>
                 </TouchableOpacity>
@@ -214,7 +219,7 @@ export default function EditChoreScreen() {
         animationType="fade"
         onRequestClose={() => setShowWeightPicker(false)}
       >
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
           onPress={() => setShowWeightPicker(false)}
@@ -229,15 +234,9 @@ export default function EditChoreScreen() {
                     setWeight(num);
                     setShowWeightPicker(false);
                   }}
-                  style={[
-                    styles.weightPickerItem,
-                    weight === num && styles.weightPickerItemActive
-                  ]}
+                  style={[styles.weightPickerItem, weight === num && styles.weightPickerItemActive]}
                 >
-                  <Text style={[
-                    styles.pickerText,
-                    weight === num && styles.pickerTextActive
-                  ]}>
+                  <Text style={[styles.pickerText, weight === num && styles.pickerTextActive]}>
                     {num}
                   </Text>
                 </TouchableOpacity>
@@ -259,26 +258,30 @@ export default function EditChoreScreen() {
       )}
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
+        <ActionButton
+          label={updateMutation.isPending ? 'Sparar…' : 'Spara'}
+          icon="check"
+          onPress={() => {
+            if (!updateMutation.isPending && !deleteMutation.isPending) handleSave();
+          }}
+          backgroundColor="#4A90E2"
+          textColor="#fff"
           style={styles.saveButton}
-          onPress={handleSave}
-          disabled={updateMutation.isPending || deleteMutation.isPending}
-        >
-          <View style={styles.circleIcon}>
-            <Text style={styles.checkIcon}>+</Text>
-          </View>
-          <Text style={styles.saveButtonText}>Spara</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+        />
+
+        <ActionButton
+          label="Stäng"
+          icon="close"
+          onPress={() => {
+            if (!updateMutation.isPending && !deleteMutation.isPending) {
+              router.push(`/(tabs)/chores/details/${id}`);
+            }
+          }}
+          backgroundColor="#fff"
+          textColor="#000"
+          iconColor="#000"
           style={styles.closeButton}
-          onPress={() => router.push(`/chores/details/${id}`)}
-          disabled={updateMutation.isPending || deleteMutation.isPending}
-        >
-          <View style={[styles.circleIcon, styles.circleIconDark]}>
-            <Text style={[styles.checkIcon, styles.checkIconDark]}>×</Text>
-          </View>
-          <Text style={styles.closeButtonText}>Stäng</Text>
-        </TouchableOpacity>
+        />
       </View>
     </View>
   );
@@ -363,10 +366,10 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: 'row',
-    padding: 0,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#F5F5F5',
+    columnGap: 12,
   },
   saveButton: {
     flex: 1,
@@ -375,6 +378,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
   },
   closeButton: {
     flex: 1,
@@ -383,8 +387,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    borderLeftWidth: 1,
-    borderLeftColor: '#E0E0E0',
+    borderWidth: 1,
   },
   circleIcon: {
     width: 24,
