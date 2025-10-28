@@ -6,9 +6,10 @@ import PeriodPicker, {
   PeriodPickerValue,
 } from "@/components/stats/PeriodPicker";
 import { useTheme } from "@/state/ThemeContext";
+import { useFocusEffect } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Card, Text } from "react-native-paper";
 
@@ -27,7 +28,11 @@ export default function StatScreen() {
     [period.mode, period.anchor]
   );
 
-  const { data: stats, isPending } = useQuery<StatsBundle>({
+  const {
+    data: stats,
+    isPending,
+    refetch,
+  } = useQuery<StatsBundle>({
     queryKey: [
       "stats",
       activeHouseholdId,
@@ -37,13 +42,21 @@ export default function StatScreen() {
     ],
     queryFn: () => computeStats(activeHouseholdId!, range.from, range.to),
     enabled: !!activeHouseholdId,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: true, // via AppState (bakgrund → förgrund)
     refetchOnReconnect: true,
     staleTime: 0,
     gcTime: 1000 * 60 * 5,
   });
 
-  // Logga när data uppdateras (v5 saknar onSuccess/onError i hook-options)
+  // Refetcha när skärmen får fokus (tab in igen)
+  useFocusEffect(
+    useCallback(() => {
+      if (!activeHouseholdId) return;
+      refetch();
+    }, [activeHouseholdId, refetch, period.mode, range.from, range.to])
+  );
+
+  // Logga när data uppdateras
   useEffect(() => {
     if (!stats || !activeHouseholdId) return;
     console.log(
