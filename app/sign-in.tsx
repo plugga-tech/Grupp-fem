@@ -33,17 +33,11 @@ export default function SignInScreen() {
     router.push('./register');
   };
 
-  const handleForgotPassword = () => {
-    Alert.alert('Info', 'Forgot password feature coming soon');
-  };
-
   return (
     <View style={styles.container}>
       {/* Logo Section */}
       <View style={styles.logoContainer}>
         <Image
-          // Byt sökväg om ditt alias @ inte pekar till projektroten:
-          // require('../assets/images/logo.png') eller ../../ beroende på var filen ligger
           source={require('@/assets/images/logo.png')}
           style={styles.logo}
           resizeMode="contain"
@@ -96,15 +90,6 @@ export default function SignInScreen() {
           labelStyle={styles.linkText}
         >
           Skapa konto
-        </Button>
-
-        <Button
-          mode="text"
-          onPress={handleForgotPassword}
-          style={styles.linkButton}
-          labelStyle={styles.linkText}
-        >
-          Glömt lösenord?
         </Button>
       </View>
     </View>
