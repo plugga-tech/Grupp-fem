@@ -1,19 +1,18 @@
-import { getHouseholds, householdKeys } from '@/api/household';
+import { householdKeys } from '@/api/household';
+import { getUserHouseholds, UserHousehold } from '@/api/user';
 import { currentHouseholdAtom } from '@/atoms';
 import AppHeader from '@/components/AppHeader';
 import CreateHouseholdModal from '@/components/CreateHouseholdModal';
 import JoinHouseholdModal from '@/components/JoinHouseholdModal';
 import { useHouseholdMutations } from '@/hooks/useHouseholdMutations';
 import { useTheme } from '@/state/ThemeContext';
-import { AvatarKey } from '@/utils/avatar';
 import { useQuery } from '@tanstack/react-query';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { getAuth } from 'firebase/auth';
 import { useAtom } from 'jotai';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { HouseholdList, HouseholdSummary } from '../../../components/HouseholdList';
-import { getUserHouseholds, UserHousehold } from '@/api/user';
 
 export default function HouseholdScreen() {
   const router = useRouter();
@@ -55,18 +54,7 @@ export default function HouseholdScreen() {
 
   const handleSetActiveHousehold = (selectedHousehold: HouseholdSummary) => {
     setCurrentHousehold(selectedHousehold as UserHousehold);
-    Alert.alert(
-      'Hushåll Aktiverat',
-      `"${selectedHousehold.name}" är nu ditt aktiva hushåll. Du kan se detta i din profil.`,
-      [
-        {
-          text: 'OK',
-          onPress: () => {
-            router.push('/profile');
-          },
-        },
-      ],
-    );
+    router.push('/(tabs)/chores');
   };
 
   if (error) return <Text>Kunde inte hämta hushåll.</Text>;
@@ -76,7 +64,6 @@ export default function HouseholdScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <AppHeader
         title="Dina hushåll"
-        rightActions={[{ icon: 'account', onPress: () => router.push('/(tabs)/profile') }]}
         leftAction={{ icon: 'chevron-left', onPress: () => router.back() }}
       />
 
