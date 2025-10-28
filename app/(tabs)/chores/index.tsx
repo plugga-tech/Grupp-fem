@@ -9,6 +9,7 @@ import { getAuth } from 'firebase/auth';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Badge, Card, IconButton } from 'react-native-paper';
 import { choreKeys, getChoresWithStatus } from '../../../api/chores';
+import { currentHouseholdAtom, currentUserAtom } from '../../../atoms';
 
 export default function ChoreScreen() {
   const router = useRouter();
@@ -116,7 +117,7 @@ export default function ChoreScreen() {
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
           {chores.map((chore) => {
             const hasAvatars = chore.completed_by_avatars && chore.completed_by_avatars.length > 0;
-            
+
             return (
               <TouchableOpacity
                 key={chore.id}

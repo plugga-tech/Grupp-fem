@@ -1,5 +1,7 @@
+import { currentHouseholdAtom } from '@/atoms';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
+import { useAtom } from 'jotai';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
@@ -18,15 +20,15 @@ import {
   updateUserAvatar,
 } from '../../../api/household';
 import { getUserHouseholds, updateUserDisplayName } from '../../../api/user';
-import { useActiveHousehold } from '../../../contexts/ActiveHouseholdContext';
-import { useAuth } from '../../../contexts/AuthContext';
-import { ThemeMode, useTheme } from '../../../contexts/ThemeContext';
+import { useAuth } from '../../../state/AuthContext';
+import { ThemeMode, useTheme } from '../../../state/ThemeContext';
 import { AvatarKey, getAvatarInfo } from '../../../utils/avatar';
 
 export default function ProfileScreen() {
   const { user } = useAuth();
   const router = useRouter();
-  const { activeHouseholdId, setActiveHouseholdId } = useActiveHousehold();
+  const [selectedHousehold, setSelectedHousehold] = useAtom(currentHouseholdAtom);
+
   const { themeMode, setThemeMode, colors, isDark } = useTheme();
   const [name, setName] = useState(user?.displayName || '');
   const [selectedAvatar, setSelectedAvatar] = useState<AvatarKey | null>(null);
@@ -55,28 +57,21 @@ export default function ProfileScreen() {
     enabled: !!user?.uid,
   });
 
-  const currentHousehold = activeHouseholdId
-    ? households.find((h) => h.id === activeHouseholdId)
-    : households[0];
-
-  useEffect(() => {
-    if (households.length > 0 && !activeHouseholdId) {
-      setActiveHouseholdId(households[0].id);
-    }
-  }, [households, activeHouseholdId, setActiveHouseholdId]);
+  const activeHousehold = selectedHousehold ?? households[0] ?? null;
+  const activeHouseholdId = activeHousehold?.id ?? null;
 
   const { data: availableAvatars = [] } = useQuery({
-    queryKey: ['available-avatars', currentHousehold?.id],
-    queryFn: () => getAvailableAvatarsForHousehold(currentHousehold!.id),
-    enabled: !!currentHousehold?.id,
+    queryKey: ['available-avatars', activeHousehold?.id],
+    queryFn: () => getAvailableAvatarsForHousehold(activeHousehold!.id),
+    enabled: !!activeHousehold?.id,
   });
 
   const updateAvatarMutation = useMutation({
     mutationFn: (newAvatar: AvatarKey) => {
-      if (!currentHousehold?.id) {
+      if (!activeHousehold?.id) {
         throw new Error('Inget aktivt hushåll valt');
       }
-      return updateUserAvatar(user!.uid, currentHousehold.id, newAvatar);
+      return updateUserAvatar(user!.uid, activeHousehold.id, newAvatar);
     },
     onSuccess: () => {
       console.log('Avatar updated successfully, invalidating queries...');
@@ -133,7 +128,7 @@ export default function ProfileScreen() {
         queryClient.invalidateQueries({ queryKey: householdKeys.all });
       }
 
-      setActiveHouseholdId(null);
+      setSelectedHousehold(null);
       Alert.alert('Framgång', 'Du har lämnat hushållet');
     },
     onError: (error) => {
@@ -142,13 +137,13 @@ export default function ProfileScreen() {
   });
 
   useEffect(() => {
-    if (currentHousehold?.currentUserMember?.avatar) {
-      setSelectedAvatar(currentHousehold.currentUserMember.avatar);
+    if (activeHousehold?.currentUserMember?.avatar) {
+      setSelectedAvatar(activeHousehold.currentUserMember.avatar);
     }
-  }, [currentHousehold?.id, currentHousehold?.currentUserMember?.avatar]);
+  }, [activeHousehold?.id, activeHousehold?.currentUserMember?.avatar]);
 
   const handleSaveAvatar = () => {
-    if (selectedAvatar && selectedAvatar !== currentHousehold?.currentUserMember?.avatar) {
+    if (selectedAvatar && selectedAvatar !== activeHousehold?.currentUserMember?.avatar) {
       updateAvatarMutation.mutate(selectedAvatar);
     } else {
       setShowAvatarSelection(false);
@@ -157,10 +152,11 @@ export default function ProfileScreen() {
 
   const handleHouseholdChange = (householdId: string) => {
     console.log('Changing household to:', householdId);
-    setActiveHouseholdId(householdId);
+
+    const newHousehold = households.find((h) => h.id === householdId) ?? null;
+    setSelectedHousehold(newHousehold);
     setShowHouseholdSelection(false);
 
-    const newHousehold = households.find((h) => h.id === householdId);
     console.log('New household:', newHousehold);
     if (newHousehold?.currentUserMember?.avatar) {
       setSelectedAvatar(newHousehold.currentUserMember.avatar);
@@ -182,33 +178,26 @@ export default function ProfileScreen() {
   };
 
   const handleLeaveHousehold = () => {
-    if (!currentHousehold) {
+    if (!activeHousehold) {
       Alert.alert('Fel', 'Inget aktivt hushåll att lämna');
       return;
     }
-
     Alert.alert(
       'Lämna Hushåll',
-      `Är du säker på att du vill lämna "${currentHousehold.name}"? Denna åtgärd kan inte ångras.`,
+      `Är du säker på att du vill lämna "${activeHousehold.name}"? Denna åtgärd kan inte ångras.`,
       [
-        {
-          text: 'Avbryt',
-          style: 'cancel',
-        },
+        { text: 'Avbryt', style: 'cancel' },
         {
           text: 'Lämna',
           style: 'destructive',
-          onPress: () => {
-            if (currentHousehold.id) {
-              leaveHouseholdMutation.mutate(currentHousehold.id);
-            }
-          },
+          onPress: () => activeHousehold.id && leaveHouseholdMutation.mutate(activeHousehold.id),
         },
       ],
     );
   };
 
-  const currentAvatarKey = currentHousehold?.currentUserMember?.avatar || 'Fox';
+  const currentAvatarKey = activeHousehold?.currentUserMember?.avatar ?? 'Fox';
+
   const currentAvatarInfo = getAvatarInfo(currentAvatarKey);
 
   return (
@@ -236,7 +225,7 @@ export default function ProfileScreen() {
             <Text style={styles.avatarEmoji}>{currentAvatarInfo.emoji}</Text>
           </View>
           <Text style={[styles.avatarName, { color: colors.text }]}>
-            {currentHousehold?.currentUserMember?.name || name}
+            {activeHousehold?.currentUserMember?.name || name}
           </Text>
           <Text style={[styles.changeAvatarText, { color: colors.textSecondary }]}>
             Tryck för att ändra avatar
@@ -288,10 +277,10 @@ export default function ProfileScreen() {
                 ]}
               >
                 <Text style={[styles.householdName, { color: colors.text }]}>
-                  {currentHousehold?.name || 'Välj hushåll'}
+                  {activeHousehold?.name || 'Välj hushåll'}
                 </Text>
                 <Text style={[styles.householdCode, { color: colors.textSecondary }]}>
-                  Kod: {currentHousehold?.code || 'N/A'}
+                  Kod: {activeHousehold?.code || 'N/A'}
                 </Text>
                 <View style={styles.householdStatus}>
                   <Text style={[styles.householdStatusText, { color: '#4CAF50' }]}>● Aktivt</Text>

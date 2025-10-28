@@ -1,4 +1,5 @@
 import { atom } from 'jotai';
+import { UserHousehold } from '@/api/user';
 
 export interface User {
   id: string;
@@ -8,8 +9,8 @@ export interface User {
 
 export interface Household {
   id: string;
-  name: string;
-  code: string;
+  name?: string;
+  code?: string;
 }
 export const currentUserAtom = atom<User | null>(null);
 export const currentHouseholdAtom = atom<Household | null>(null);

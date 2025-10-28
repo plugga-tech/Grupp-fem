@@ -1,4 +1,4 @@
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from '@/state/ThemeContext';
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Icon } from 'react-native-paper';
