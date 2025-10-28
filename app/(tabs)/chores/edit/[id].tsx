@@ -1,16 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useAtom } from 'jotai';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { IconButton } from 'react-native-paper';
 import { deleteChore, getChoresWithStatus, updateChore } from '../../../../api/chores';
-import { useActiveHousehold } from '@/contexts/ActiveHouseholdContext';
+import { currentHouseholdAtom } from '../../../../atoms';
 
 export default function EditChoreScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const queryClient = useQueryClient();
-  const { activeHouseholdId } = useActiveHousehold();
+  const [currentHousehold] = useAtom(currentHouseholdAtom);
+  const activeHouseholdId = currentHousehold?.id ?? null;
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -173,7 +175,6 @@ export default function EditChoreScreen() {
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Frequency Picker Modal */}
       <Modal
         visible={showFrequencyPicker}
         transparent={true}
@@ -217,7 +218,6 @@ export default function EditChoreScreen() {
         </TouchableOpacity>
       </Modal>
 
-      {/* Weight Picker Modal */}
       <Modal
         visible={showWeightPicker}
         transparent={true}
