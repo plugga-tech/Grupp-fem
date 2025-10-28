@@ -3,11 +3,11 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { IconButton } from 'react-native-paper';
 import { completeChore, getChoresWithStatus } from '../../../../api/chores';
 import { getHouseholdMembers, householdKeys } from '@/api/household';
 import { getAuth } from 'firebase/auth';
 import { currentHouseholdAtom } from '../../../../atoms';
+import AppHeader from '@/components/AppHeader';
 
 export default function ChoreDetailsScreen() {
   const router = useRouter();
@@ -16,18 +16,15 @@ export default function ChoreDetailsScreen() {
   const [currentHousehold] = useAtom(currentHouseholdAtom);
   const activeHouseholdId = currentHousehold?.id ?? null;
   const [showCompleteToast, setShowCompleteToast] = useState(false);
-
-  // Hämta current user från Firebase Auth
+// Hämta current user från Firebase Auth
   const auth = getAuth();
   const userId = auth.currentUser?.uid;
-
-  // Hämta household members för att kolla om användaren är admin
+// Hämta household members för att kolla om användaren är admin
   const { data: members = [] } = useQuery({
     queryKey: householdKeys.members(activeHouseholdId || ''),
     queryFn: () => getHouseholdMembers(activeHouseholdId || ''),
     enabled: !!activeHouseholdId,
   });
-
   // Kolla om current user är admin
   const currentMember = members.find(m => m.userId === userId);
   const isAdmin = currentMember?.isAdmin ?? false;
@@ -77,27 +74,21 @@ export default function ChoreDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <IconButton 
-          icon="arrow-left" 
-          size={24}
-          onPress={() => router.push('/(tabs)/chores')} 
-          style={{ margin: 0 }}
-        />
-        <Text style={styles.headerTitle}>Sysslans information</Text>
-        
-        {isAdmin ? (
-          <IconButton 
-            icon="lead-pencil"
-            size={24}
-            onPress={() => router.push(`/chores/edit/${chore.id}`)}
-            style={{ margin: 0 }}
-            iconColor="#4A90E2"
-          />
-        ) : (
-          <View style={{ width: 48 }} />
-        )}
-      </View>
+      <AppHeader
+        title="Sysslans information"
+        leftAction={{ 
+          icon: 'arrow-left', 
+          onPress: () => router.push('/(tabs)/chores')
+        }}
+        rightActions={
+          isAdmin
+            ? [{
+                icon: 'lead-pencil',
+                onPress: () => router.push(`/chores/edit/${chore.id}`)
+              }]
+            : undefined
+        }
+      />
 
       <ScrollView style={styles.content}>
         <View style={styles.card}>
@@ -162,21 +153,6 @@ const styles = StyleSheet.create({
   center: {
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 24,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000',
   },
   content: {
     flex: 1,
