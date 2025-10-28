@@ -1,50 +1,57 @@
-# Welcome to your Expo app 👋
+# Hushållet
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+En Expo/React Native-app för att organisera hushållssysslor. Användare kan skapa hushåll, bjuda in familjemedlemmar med en kod och hålla koll på sysslor med hjälp av Firebase, React Query och Jotai.
 
-## Get started
+---
 
-1. Install dependencies
+## Funktioner
 
-   ```bash
-   npm install
-   ```
+- E-postbaserad inloggning och registrering via Firebase Authentication.
+- Hantering av hushåll: skapa, gå med i hushåll med kod, sätt aktivt hushåll och tilldela avatarer.
+- Sysslolista med statusindikatorer (vem som gjort vad, hur ofta en syssla ska göras, värde per syssla).
+- Adminflöden för att skapa, uppdatera, slutföra och ta bort sysslor.
+- Profilsida med byte av visningsnamn, avatar per hushåll och tema (ljus/mörk/auto).
 
-2. Start the app
+---
 
-   ```bash
-   npx expo start
-   ```
+### Kodstruktur
 
-In the output, you'll find options to open the app in a
+app/ # Expo Router-sidor och stackar
+\_layout.tsx # Root med Auth-, Theme- och React Query-providers
+(tabs)/ # Bottom-tabbar med vyer för sysslor, hushåll, profil m.m.
+api/ # Firestore/Firebase-anrop (auth, chores, household, user)
+components/ # Återanvändbara UI-komponenter och modal-fönster
+hooks/ # Skräddarsydda hooks (React Query setup, hushållsmutationer)
+state/ # Contexts för Auth och Theme
+utils/avatar.ts # Avataruppsättning och hjälpfunktioner
+atoms.ts # Jotai-atomer för användare och aktivt hushåll
+firebase-config.ts # Firebase-initiering (Auth/Firestore/Storage)
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+---
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Teknisk stack
 
-## Get a fresh project
+- Expo, Expo Router och React Native.
+- TypeScript, React Native Paper för UI-komponenter.
+- Firebase (Auth & Firestore) för autentisering och data.
+- @tanstack/react-query för caching, sync samt mutationer.
+- Jotai för lättviktig global state (t.ex. aktivt hushåll).
 
-When you're ready, run:
+---
+
+## Komma igång
+
+### Förutsättningar
+
+- Node.js 18 eller senare samt npm.
+- Expo CLI (valfritt men underlättar `expo start`).
+- Firebase-projekt om du inte vill använda de incheckade API-nycklarna.
+
+### Installation
 
 ```bash
-npm run reset-project
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+---
