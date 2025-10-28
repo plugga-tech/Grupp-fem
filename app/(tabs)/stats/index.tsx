@@ -6,8 +6,9 @@ import PeriodPicker, {
   PeriodPickerValue,
 } from "@/components/stats/PeriodPicker";
 import { useTheme } from "@/state/ThemeContext";
+import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Card, Text } from "react-native-paper";
 
@@ -21,39 +22,40 @@ export default function StatScreen() {
     anchor: new Date(),
   });
 
-  const [loading, setLoading] = useState(false);
-  const [stats, setStats] = useState<StatsBundle | null>(null);
+  const range = useMemo(
+    () => getPeriodRange(period.mode, period.anchor),
+    [period.mode, period.anchor]
+  );
 
-  const range = getPeriodRange(period.mode, period.anchor);
+  const { data: stats, isPending } = useQuery<StatsBundle>({
+    queryKey: [
+      "stats",
+      activeHouseholdId,
+      period.mode,
+      range.from.toISOString(),
+      range.to.toISOString(),
+    ],
+    queryFn: () => computeStats(activeHouseholdId!, range.from, range.to),
+    enabled: !!activeHouseholdId,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    staleTime: 0,
+    gcTime: 1000 * 60 * 5,
+  });
 
+  // Logga när data uppdateras (v5 saknar onSuccess/onError i hook-options)
   useEffect(() => {
-    const fetchData = async () => {
-      if (!activeHouseholdId) {
-        setStats(null);
-        console.log("[stats] Ingen aktiv household vald ännu.");
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const s = await computeStats(activeHouseholdId, range.from, range.to);
-        setStats(s);
-        console.log(
-          `[stats] Hushåll: ${activeHouseholdId}` +
-            `\nPeriod: ${range.from.toISOString()} – ${range.to.toISOString()}` +
-            `\nTotalt-slices: ${s.total.length}, Sysslor: ${s.chores.length}`
-        );
-        if (s.total[0]) console.log("[stats] Första totalslice:", s.total[0]);
-        if (s.chores[0]) console.log("[stats] Första sysslan:", s.chores[0]);
-      } catch (error) {
-        console.error("[stats] computeStats failed:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [activeHouseholdId, period.mode, period.anchor]);
+    if (!stats || !activeHouseholdId) return;
+    console.log(
+      `[stats] Hushåll: ${activeHouseholdId}` +
+        `\nPeriod: ${range.from.toISOString()} – ${range.to.toISOString()}` +
+        `\nTotalt-slices: ${stats.total.length}, Sysslor: ${stats.chores.length}`
+    );
+    if (stats.total[0])
+      console.log("[stats] Första totalslice:", stats.total[0]);
+    if (stats.chores[0])
+      console.log("[stats] Första sysslan:", stats.chores[0]);
+  }, [stats, activeHouseholdId, range.from, range.to]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -80,7 +82,7 @@ export default function StatScreen() {
               Totalt
             </Text>
             <Text style={{ color: colors.textSecondary }}>
-              (diagram kommer här)
+              {isPending ? "(laddar...)" : "(diagram kommer här)"}
             </Text>
           </Card.Content>
         </Card>
