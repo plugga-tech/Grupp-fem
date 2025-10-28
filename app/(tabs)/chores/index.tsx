@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   dayBadgeNormal: {
-    backgroundColor: '#D3D3D3',
+    backgroundColor: '#9E9E9E',
   },
   dayBadgeOverdue: {
     backgroundColor: '#CD5D6F',
