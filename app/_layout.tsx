@@ -58,7 +58,7 @@ function RootLayoutNav() {
     if (!user && inAuthGroup) {
       router.replace("/sign-in");
     } else if (user && !inAuthGroup) {
-      router.replace("/(tabs)/chores");
+      router.replace("/(tabs)/household");
     }
   }, [user, loading, segments]);
 

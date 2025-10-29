@@ -1,7 +1,7 @@
 import { useAuth } from '@/state/AuthContext';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, StyleSheet, View, Image } from 'react-native';
+import { Alert, Image, StyleSheet, View } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
 
 export default function SignInScreen() {
@@ -21,7 +21,7 @@ export default function SignInScreen() {
     setLoading(true);
     try {
       await login(email, password);
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/household');
     } catch (error: any) {
       Alert.alert('Sign In Failed', error.message);
     } finally {

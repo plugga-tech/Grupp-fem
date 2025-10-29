@@ -56,7 +56,6 @@ export default function HouseholdScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <AppHeader
         title="Dina hushåll"
-        leftAction={{ icon: 'chevron-left', onPress: () => router.back() }}
       />
 
       <HouseholdList
