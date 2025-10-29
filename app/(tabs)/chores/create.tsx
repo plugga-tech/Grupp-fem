@@ -28,10 +28,7 @@ export default function CreateChoreScreen() {
         queryKey: choreKeys.list(variables.household_id),
       });
       setShowSuccess(true);
-      setTimeout(() => {
-        setShowSuccess(false);
         router.push('/(tabs)/chores');
-      }, 2000);
     },
     onError: (error) => {
       console.error(error);
@@ -190,7 +187,7 @@ export default function CreateChoreScreen() {
           label={mutation.isPending ? 'Sparar…' : 'Spara'}
           icon="plus"
           onPress={() => {
-            if (!mutation.isPending) handleSave(); 
+            if (!mutation.isPending) handleSave();
           }}
           backgroundColor="#4A90E2"
           textColor="#fff"
@@ -201,7 +198,7 @@ export default function CreateChoreScreen() {
           label="Stäng"
           icon="close"
           onPress={() => {
-            if (!mutation.isPending) router.push('/(tabs)/chores'); 
+            if (!mutation.isPending) router.push('/(tabs)/chores');
           }}
           backgroundColor="#fff"
           textColor="#000"
