@@ -1,7 +1,7 @@
 import { useAuth } from '@/state/AuthContext';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, StyleSheet, View, Image } from 'react-native';
+import { Alert, Image, StyleSheet, View } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
 
 export default function RegisterScreen() {
@@ -31,7 +31,7 @@ export default function RegisterScreen() {
     setLoading(true);
     try {
       await register(email, password);
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/household');
     } catch (error: any) {
       Alert.alert('Registrering misslyckades', error.message);
     } finally {
