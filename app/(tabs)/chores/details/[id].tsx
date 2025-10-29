@@ -23,7 +23,7 @@ export default function ChoreDetailsScreen() {
   const [currentHousehold] = useAtom(currentHouseholdAtom);
   const activeHouseholdId = currentHousehold?.id ?? null;
   const [showCompleteToast, setShowCompleteToast] = useState(false);
-   // Hämta current user från Firebase Auth
+  // Hämta current user från Firebase Auth
   const auth = getAuth();
   const userId = auth.currentUser?.uid;
   // Hämta household members för att kolla om användaren är admin
@@ -32,7 +32,7 @@ export default function ChoreDetailsScreen() {
     queryFn: () => getHouseholdMembers(activeHouseholdId || ""),
     enabled: !!activeHouseholdId,
   });
-  // Kolla om current user är admin
+    // Kolla om current user är admin
   const currentMember = members.find((m) => m.userId === userId);
   const isAdmin = currentMember?.isAdmin ?? false;
 
@@ -50,12 +50,9 @@ export default function ChoreDetailsScreen() {
     meta: { invalidateStatsForHousehold: activeHouseholdId },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["chores"] });
-
       setShowCompleteToast(true);
-      setTimeout(() => {
-        setShowCompleteToast(false);
-        router.push("/(tabs)/chores");
-      }, 2000);
+     
+      router.push("/(tabs)/chores");
     },
     onError: (error) => {
       console.error("Error completing chore:", error);
