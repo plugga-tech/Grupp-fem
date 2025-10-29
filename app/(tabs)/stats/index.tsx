@@ -1,12 +1,14 @@
 import { computeStats, type StatsBundle } from "@/api/stats";
 import { currentHouseholdAtom } from "@/atoms";
 import AppHeader from "@/components/AppHeader";
+import MiniPie from "@/components/stats/MiniPie";
 import PeriodPicker, {
   getPeriodRange,
   PeriodPickerValue,
 } from "@/components/stats/PeriodPicker";
+import Pie from "@/components/stats/Pie";
 import { useTheme } from "@/state/ThemeContext";
-import { getAvatarInfo } from "@/utils/avatar";
+import { AVATAR_COLORS, AvatarKey, getAvatarInfo } from "@/utils/avatar";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import React, { useMemo, useState } from "react";
@@ -16,7 +18,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { ActivityIndicator, Card, Text } from "react-native-paper";
+import { Card, Text } from "react-native-paper";
 
 export default function StatScreen() {
   const { colors } = useTheme();
@@ -27,13 +29,12 @@ export default function StatScreen() {
     mode: "week",
     anchor: new Date(),
   });
-
   const range = useMemo(
     () => getPeriodRange(period.mode, period.anchor),
     [period.mode, period.anchor]
   );
 
-  const { data: stats, isPending } = useQuery<StatsBundle>({
+  const { data: stats } = useQuery<StatsBundle>({
     queryKey: [
       "stats",
       activeHouseholdId,
@@ -49,30 +50,20 @@ export default function StatScreen() {
     gcTime: 1000 * 60 * 5,
   });
 
+  // gap ≈ 3% av innehållsbredd (dp)
   const { width } = useWindowDimensions();
   const H_PADDING = 16;
   const innerWidth = width - H_PADDING * 2;
   const GAP = innerWidth * 0.03;
 
-  const renderTotalLine = () => {
-    if (isPending) return <ActivityIndicator size="small" />;
-    if (!stats || stats.total.length === 0) {
-      return (
-        <Text style={{ color: colors.textSecondary }}>
-          (inga data för vald period)
-        </Text>
-      );
-    }
-    const parts = stats.total.map((s) => {
-      const emoji = s.avatar ? getAvatarInfo(s.avatar).emoji : "👤";
-      return `${emoji} ${s.value}`;
-    });
-    return (
-      <Text style={{ color: colors.textSecondary, textAlign: "center" }}>
-        {parts.join("   •   ")}
-      </Text>
-    );
-  };
+  // Totalt: färger + emoji på varje slice
+  const totalSlices = (stats?.total ?? []).map((s) => ({
+    value: s.value,
+    color: s.avatar
+      ? AVATAR_COLORS[s.avatar as AvatarKey] ?? "#CCCCCC"
+      : "#CCCCCC",
+    icon: s.avatar ? getAvatarInfo(s.avatar).emoji : "👤",
+  }));
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -94,29 +85,31 @@ export default function StatScreen() {
 
         <Card style={[styles.totalCard, { backgroundColor: colors.card }]}>
           <Card.Content style={styles.center}>
-            <View style={[styles.bigCircle, { borderColor: colors.border }]} />
+            {/* Stor “pie” utan donut, emojis inne i sina slices */}
+            <Pie data={totalSlices} showSliceIcons iconSize={20} />
             <Text style={[styles.totalTitle, { color: colors.text }]}>
               Totalt
             </Text>
-            {renderTotalLine()}
+            {/* Ingen summering under (enligt Figma) */}
           </Card.Content>
         </Card>
 
         <View style={[styles.grid, { columnGap: GAP, rowGap: GAP }]}>
           {(stats?.chores ?? []).map((c) => {
-            const parts = c.slices.map((s) => {
-              const emoji = s.avatar ? getAvatarInfo(s.avatar).emoji : "👤";
-              return `${emoji} ${s.value}`;
-            });
+            const slices = c.slices.map((s) => ({
+              value: s.value,
+              color: s.avatar
+                ? AVATAR_COLORS[s.avatar as AvatarKey] ?? "#CCCCCC"
+                : "#CCCCCC",
+            }));
+
             return (
               <Card
                 key={c.choreId}
                 style={[styles.smallCard, { backgroundColor: colors.card }]}
               >
                 <Card.Content style={styles.smallCardContent}>
-                  <View
-                    style={[styles.smallCircle, { borderColor: colors.border }]}
-                  />
+                  <MiniPie data={slices} />
                   <Text
                     numberOfLines={2}
                     ellipsizeMode="tail"
@@ -124,26 +117,6 @@ export default function StatScreen() {
                   >
                     {c.name}
                   </Text>
-                  {parts.length > 0 ? (
-                    <Text
-                      numberOfLines={2}
-                      style={[
-                        styles.choreValues,
-                        { color: colors.textSecondary },
-                      ]}
-                    >
-                      {parts.join("  •  ")}
-                    </Text>
-                  ) : (
-                    <Text
-                      style={[
-                        styles.choreValues,
-                        { color: colors.textSecondary },
-                      ]}
-                    >
-                      (ingen data)
-                    </Text>
-                  )}
                 </Card.Content>
               </Card>
             );
@@ -154,23 +127,13 @@ export default function StatScreen() {
   );
 }
 
-const CIRCLE_SIZE = 160;
-
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 16 },
   periodWrapper: { marginBottom: 4 },
 
-  // Totalt-kort
   totalCard: { borderRadius: 16, paddingVertical: 12, marginBottom: 16 },
   center: { alignItems: "center", justifyContent: "center" },
-  bigCircle: {
-    width: CIRCLE_SIZE,
-    height: CIRCLE_SIZE,
-    borderRadius: CIRCLE_SIZE / 2,
-    borderWidth: 10,
-    opacity: 0.25,
-  },
   totalTitle: { marginTop: 8, fontSize: 16, fontWeight: "600" },
 
   grid: {
@@ -178,31 +141,13 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     justifyContent: "flex-start",
   },
-  smallCard: {
-    width: "31%",
-    borderRadius: 16,
-    paddingVertical: 10,
-  },
-  smallCardContent: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  smallCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    borderWidth: 8,
-    opacity: 0.25,
-    marginBottom: 6,
-  },
+  smallCard: { width: "31%", borderRadius: 16, paddingVertical: 10 },
+  smallCardContent: { alignItems: "center", justifyContent: "center" },
+
   choreName: {
     fontSize: 13,
     fontWeight: "500",
     textAlign: "center",
     minHeight: 36,
-  },
-  choreValues: {
-    marginTop: 2,
-    textAlign: "center",
   },
 });

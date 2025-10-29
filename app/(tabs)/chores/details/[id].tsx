@@ -47,12 +47,10 @@ export default function ChoreDetailsScreen() {
   const completeMutation = useMutation({
     mutationFn: () =>
       completeChore(id as string, activeHouseholdId || "", userId || ""),
+    meta: { invalidateStatsForHousehold: activeHouseholdId },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["chores"] });
-      queryClient.invalidateQueries({
-        queryKey: ["stats", activeHouseholdId],
-        exact: false,
-      });
+
       setShowCompleteToast(true);
       setTimeout(() => {
         setShowCompleteToast(false);
