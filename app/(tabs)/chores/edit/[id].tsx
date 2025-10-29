@@ -31,8 +31,6 @@ export default function EditChoreScreen() {
   const [weight, setWeight] = useState(2);
   const [showFrequencyPicker, setShowFrequencyPicker] = useState(false);
   const [showWeightPicker, setShowWeightPicker] = useState(false);
-  const [showSuccessToast, setShowSuccessToast] = useState(false);
-  const [showDeleteToast, setShowDeleteToast] = useState(false);
 
   const { data: chores, isLoading } = useQuery({
     queryKey: ['chores', activeHouseholdId],
@@ -61,8 +59,6 @@ export default function EditChoreScreen() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chores'] });
-      setShowSuccessToast(true);
-    
       router.push(`/(tabs)/chores/details/${id}`);
     },
     onError: (error) => {
@@ -75,8 +71,6 @@ export default function EditChoreScreen() {
     mutationFn: () => deleteChore(id as string),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chores'] });
-      setShowDeleteToast(true);
-     
       router.replace('/(tabs)/chores');
     },
     onError: (error) => {
@@ -239,17 +233,6 @@ export default function EditChoreScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
-
-      {showSuccessToast && (
-        <View style={styles.successToast}>
-          <Text style={styles.successToastText}>✅ Sysslan har sparats</Text>
-        </View>
-      )}
-      {showDeleteToast && (
-        <View style={styles.deleteToast}>
-          <Text style={styles.deleteToastText}>🗑️ Sysslan har tagits bort</Text>
-        </View>
-      )}
 
       <View style={styles.buttonContainer}>
         <ActionButton
@@ -440,49 +423,5 @@ const styles = StyleSheet.create({
   },
   weightPickerItemActive: {
     backgroundColor: '#9E9E9E',
-  },
-  successToast: {
-    position: 'absolute',
-    bottom: 80,
-    left: 20,
-    right: 20,
-    backgroundColor: '#E8F5E9',
-    padding: 16,
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  successToastText: {
-    fontSize: 16,
-    color: '#2E7D32',
-    fontWeight: '600',
-  },
-  deleteToast: {
-    position: 'absolute',
-    bottom: 80,
-    left: 20,
-    right: 20,
-    backgroundColor: '#FFEBEE',
-    padding: 16,
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  deleteToastText: {
-    fontSize: 16,
-    color: '#C62828',
-    fontWeight: '600',
   },
 });

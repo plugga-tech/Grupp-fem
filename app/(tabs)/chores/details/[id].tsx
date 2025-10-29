@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getAuth } from "firebase/auth";
 import { useAtom } from "jotai";
-import { useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -22,7 +21,6 @@ export default function ChoreDetailsScreen() {
   const queryClient = useQueryClient();
   const [currentHousehold] = useAtom(currentHouseholdAtom);
   const activeHouseholdId = currentHousehold?.id ?? null;
-  const [showCompleteToast, setShowCompleteToast] = useState(false);
   // Hämta current user från Firebase Auth
   const auth = getAuth();
   const userId = auth.currentUser?.uid;
@@ -32,7 +30,7 @@ export default function ChoreDetailsScreen() {
     queryFn: () => getHouseholdMembers(activeHouseholdId || ""),
     enabled: !!activeHouseholdId,
   });
-    // Kolla om current user är admin
+   // Kolla om current user är admin
   const currentMember = members.find((m) => m.userId === userId);
   const isAdmin = currentMember?.isAdmin ?? false;
 
@@ -50,8 +48,6 @@ export default function ChoreDetailsScreen() {
     meta: { invalidateStatsForHousehold: activeHouseholdId },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["chores"] });
-      setShowCompleteToast(true);
-     
       router.push("/(tabs)/chores");
     },
     onError: (error) => {
@@ -146,14 +142,6 @@ export default function ChoreDetailsScreen() {
           </Text>
         </TouchableOpacity>
       </View>
-
-      {showCompleteToast && (
-        <View style={styles.completeToast}>
-          <Text style={styles.completeToastText}>
-            ✅ Sysslan är markerad som gjord!
-          </Text>
-        </View>
-      )}
     </View>
   );
 }
@@ -237,8 +225,8 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-   justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   numberBadgeText: {
     fontSize: 16,
@@ -265,27 +253,5 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#FFFFFF",
-  },
-  completeToast: {
-    position: "absolute",
-    bottom: 80,
-    left: 20,
-    right: 20,
-    backgroundColor: "#E8F5E9",
-    padding: 16,
-    borderRadius: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  completeToastText: {
-    fontSize: 16,
-    color: "#2E7D32",
-    fontWeight: "600",
   },
 });
