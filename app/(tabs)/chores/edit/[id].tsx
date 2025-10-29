@@ -62,10 +62,8 @@ export default function EditChoreScreen() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chores'] });
       setShowSuccessToast(true);
-      setTimeout(() => {
-        setShowSuccessToast(false);
-        router.push(`/chores/details/${id}`);
-      }, 2000);
+    
+      router.push(`/(tabs)/chores/details/${id}`);
     },
     onError: (error) => {
       console.error(error);
@@ -76,12 +74,10 @@ export default function EditChoreScreen() {
   const deleteMutation = useMutation({
     mutationFn: () => deleteChore(id as string),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chores'] });
       setShowDeleteToast(true);
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['chores'] });
-        setShowDeleteToast(false);
-        router.replace('/(tabs)/chores');
-      }, 2000);
+     
+      router.replace('/(tabs)/chores');
     },
     onError: (error) => {
       console.error('Error deleting chore:', error);
