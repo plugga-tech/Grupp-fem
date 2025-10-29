@@ -13,7 +13,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { IconButton } from 'react-native-paper';
 import { deleteChore, getChoresWithStatus, updateChore } from '../../../../api/chores';
 import { currentHouseholdAtom } from '../../../../atoms';
 import AppHeader from '@/components/AppHeader';
@@ -125,7 +124,6 @@ export default function EditChoreScreen() {
     <View style={styles.container}>
       <AppHeader
         title="Ändra syssla"
-        leftAction={{ icon: 'arrow-left', onPress: () => router.back() }}
         rightActions={[
           {
             icon: 'delete-outline',
@@ -388,38 +386,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-  },
-  circleIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-  },
-  circleIconDark: {
-    borderColor: '#000',
-  },
-  checkIcon: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginTop: -2,
-  },
-  checkIconDark: {
-    color: '#000',
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  closeButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
   },
   modalOverlay: {
     flex: 1,
