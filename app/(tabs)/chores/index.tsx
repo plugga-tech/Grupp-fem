@@ -14,19 +14,16 @@ export default function ChoreScreen() {
   const router = useRouter();
   const [currentHousehold] = useAtom(currentHouseholdAtom);
   const activeHouseholdId = currentHousehold?.id ?? null;
-  
   // Hämta current user från Firebase Auth
   const auth = getAuth();
   const userId = auth.currentUser?.uid;
-
   // Hämta household members för att få deras avatarer OCH kolla admin
   const { data: members = [] } = useQuery({
     queryKey: householdKeys.members(activeHouseholdId || ''),
     queryFn: () => getHouseholdMembers(activeHouseholdId || ''),
     enabled: !!activeHouseholdId,
   });
-
-  // Kolla om current user är admin
+// Kolla om current user är admin
   const currentMember = members.find(m => m.userId === userId);
   const canAddChore = currentMember?.isAdmin ?? false;
  
@@ -123,7 +120,6 @@ export default function ChoreScreen() {
               <TouchableOpacity
                 key={chore.id}
                 onPress={() => {
-                  console.log('🎯 Navigating to chore:', chore.id);
                   router.push(`/(tabs)/chores/details/${chore.id}`);
                 }}
                 activeOpacity={0.7}
@@ -156,7 +152,6 @@ export default function ChoreScreen() {
                         )}
                       </View>
                     ) : (
-                  
                       chore.days_since_last > 0 ? (
                         <View
                           style={[
