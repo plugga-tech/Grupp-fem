@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
 import { useState } from 'react';
-import { IconButton } from 'react-native-paper';
 import { currentHouseholdAtom } from '../../../atoms';
 import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { choreKeys, createChore } from '../../../api/chores';
@@ -31,7 +30,7 @@ export default function CreateChoreScreen() {
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
-        router.back();
+        router.push('/(tabs)/chores');
       }, 2000);
     },
     onError: (error) => {
@@ -67,7 +66,6 @@ export default function CreateChoreScreen() {
     <View style={styles.container}>
       <AppHeader
         title="Skapa ny syssla"
-        leftAction={{ icon: 'arrow-left', onPress: () => router.back() }}
       />
 
       <ScrollView style={styles.form}>
@@ -192,7 +190,7 @@ export default function CreateChoreScreen() {
           label={mutation.isPending ? 'Sparar…' : 'Spara'}
           icon="plus"
           onPress={() => {
-            if (!mutation.isPending) handleSave();
+            if (!mutation.isPending) handleSave(); 
           }}
           backgroundColor="#4A90E2"
           textColor="#fff"
@@ -203,7 +201,7 @@ export default function CreateChoreScreen() {
           label="Stäng"
           icon="close"
           onPress={() => {
-            if (!mutation.isPending) router.back();
+            if (!mutation.isPending) router.push('/(tabs)/chores'); 
           }}
           backgroundColor="#fff"
           textColor="#000"
@@ -295,7 +293,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
     columnGap: 12,
   },
-
   saveButton: {
     flex: 1,
     flexDirection: 'row',
@@ -313,38 +310,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-  },
-  circleIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-  },
-  circleIconDark: {
-    borderColor: '#000',
-  },
-  plusIcon: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginTop: -2,
-  },
-  plusIconDark: {
-    color: '#000',
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  closeButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
   },
   modalOverlay: {
     flex: 1,

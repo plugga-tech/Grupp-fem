@@ -23,7 +23,7 @@ export default function ChoreDetailsScreen() {
   const [currentHousehold] = useAtom(currentHouseholdAtom);
   const activeHouseholdId = currentHousehold?.id ?? null;
   const [showCompleteToast, setShowCompleteToast] = useState(false);
-  // Hämta current user från Firebase Auth
+   // Hämta current user från Firebase Auth
   const auth = getAuth();
   const userId = auth.currentUser?.uid;
   // Hämta household members för att kolla om användaren är admin
@@ -82,7 +82,10 @@ export default function ChoreDetailsScreen() {
     <View style={styles.container}>
       <AppHeader
         title="Sysslans information"
-        leftAction={{ icon: "arrow-left", onPress: () => router.back() }}
+        leftAction={{ 
+          icon: "arrow-left", 
+          onPress: () => router.push("/(tabs)/chores")
+        }}
         rightActions={
           isAdmin
             ? [
@@ -237,7 +240,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    justifyContent: "center",
+   justifyContent: "center",
     alignItems: "center",
   },
   numberBadgeText: {
