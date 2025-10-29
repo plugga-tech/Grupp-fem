@@ -19,7 +19,6 @@ export default function CreateChoreScreen() {
   const [weight, setWeight] = useState(2);
   const [showFrequencyPicker, setShowFrequencyPicker] = useState(false);
   const [showWeightPicker, setShowWeightPicker] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
 
   const mutation = useMutation({
     mutationFn: createChore,
@@ -27,8 +26,7 @@ export default function CreateChoreScreen() {
       queryClient.invalidateQueries({
         queryKey: choreKeys.list(variables.household_id),
       });
-      setShowSuccess(true);
-        router.push('/(tabs)/chores');
+      router.push('/(tabs)/chores');
     },
     onError: (error) => {
       console.error(error);
@@ -175,12 +173,6 @@ export default function CreateChoreScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
-
-      {showSuccess && (
-        <View style={styles.successToast}>
-          <Text style={styles.successToastText}>✅ Sysslan har sparats</Text>
-        </View>
-      )}
 
       <View style={styles.buttonContainer}>
         <ActionButton
@@ -365,26 +357,5 @@ const styles = StyleSheet.create({
   },
   weightPickerItemActive: {
     backgroundColor: '#9E9E9E',
-  },
-  successToast: {
-    position: 'absolute',
-    bottom: 80,
-    left: 20,
-    right: 20,
-    backgroundColor: '#E8F5E9',
-    padding: 16,
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  successToastText: {
-    fontSize: 16,
-    color: '#2E7D32',
-    fontWeight: '600',
   },
 });
