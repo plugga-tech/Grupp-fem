@@ -1,9 +1,11 @@
 import { createUser, signInUser, signOutUser } from '@/api/auth';
+import { currentHouseholdAtom } from '@/atoms';
 import { auth } from '@/firebase-config';
 import {
     User,
     onAuthStateChanged,
 } from 'firebase/auth';
+import { useSetAtom } from 'jotai';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 interface AuthContextType {
@@ -19,6 +21,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const setCurrentHousehold = useSetAtom(currentHouseholdAtom);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -49,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const logout = async () => {
         try {
+            setCurrentHousehold(null); // Clear household atom before logout
             await signOutUser();
         } catch (error) {
             console.error('Logout error:', error);
