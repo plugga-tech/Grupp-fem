@@ -23,8 +23,7 @@ import {
 } from "../../../api/household";
 import {
   getUserHouseholds,
-  updateUserDisplayName,
-  UserHousehold,
+  updateUserDisplayName
 } from "../../../api/user";
 import { useAuth } from "../../../state/AuthContext";
 import { ThemeMode, useTheme } from "../../../state/ThemeContext";
@@ -45,18 +44,10 @@ export default function ProfileScreen() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const initialName = user?.displayName || "";
-    const hasChanges =
-      name !== initialName && name.trim() !== "" && name.trim() !== initialName;
-
-    if (hasChanges) {
-      const timeoutId = setTimeout(() => {
-        if (updateNameMutation && !updateNameMutation.isPending) {
-          updateNameMutation.mutate(name.trim());
-        }
-      }, 2000);
-
-      return () => clearTimeout(timeoutId);
+    if (name !== user?.displayName && name.trim() !== "" && name.trim() !== user?.displayName) {
+      if (updateNameMutation && !updateNameMutation.isPending) {
+        updateNameMutation.mutate(name.trim());
+      }
     }
   }, [name, user?.displayName]);
 
@@ -66,23 +57,24 @@ export default function ProfileScreen() {
     enabled: !!user?.uid,
   });
 
-  const activeHousehold = (
-    hasLeftHousehold ? null : selectedHousehold ?? households[0] ?? null
-  ) as UserHousehold | null;
-  const activeHouseholdId = activeHousehold?.id ?? null;
+  const activeHouseholdId = hasLeftHousehold
+    ? null
+    : selectedHousehold?.id ?? null;
+
+  const activeHousehold = households.find(h => h.id === activeHouseholdId) ?? null;
 
   const { data: availableAvatars = [] } = useQuery({
-    queryKey: ["available-avatars", activeHousehold?.id],
-    queryFn: () => getAvailableAvatarsForHousehold(activeHousehold!.id),
-    enabled: !!activeHousehold?.id,
+    queryKey: ["available-avatars", activeHouseholdId],
+    queryFn: () => getAvailableAvatarsForHousehold(activeHouseholdId!),
+    enabled: !!activeHouseholdId,
   });
 
   const updateAvatarMutation = useMutation({
     mutationFn: (newAvatar: AvatarKey) => {
-      if (!activeHousehold?.id) {
+      if (!activeHouseholdId) {
         throw new Error("Inget aktivt hushåll valt");
       }
-      return updateUserAvatar(user!.uid, activeHousehold.id, newAvatar);
+      return updateUserAvatar(user!.uid, activeHouseholdId, newAvatar);
     },
     meta: { invalidateStatsForHousehold: activeHouseholdId },
     onSuccess: () => {
@@ -99,7 +91,6 @@ export default function ProfileScreen() {
       }
 
       setShowAvatarSelection(false);
-      Alert.alert("Framgång", "Avatar uppdaterad!");
     },
     onError: (error) => {
       Alert.alert(
@@ -127,8 +118,6 @@ export default function ProfileScreen() {
         });
         queryClient.invalidateQueries({ queryKey: householdKeys.all });
       }
-
-      Alert.alert("Framgång", "Namn uppdaterat!");
     },
     onError: (error) => {
       Alert.alert(
@@ -300,7 +289,7 @@ export default function ProfileScreen() {
 
         <View style={styles.section}>
           <Text style={[styles.sectionLabel, { color: colors.text }]}>
-            Namn {updateNameMutation.isPending && "(sparar...)"}
+            Namn
           </Text>
           <TextInput
             style={[
@@ -309,14 +298,12 @@ export default function ProfileScreen() {
                 backgroundColor: colors.surface,
                 borderColor: colors.border,
                 color: colors.text,
-                opacity: updateNameMutation.isPending ? 0.7 : 1,
               },
             ]}
             value={name}
             onChangeText={setName}
             placeholder="Ditt namn"
             placeholderTextColor={colors.textSecondary}
-            editable={!updateNameMutation.isPending}
           />
         </View>
 
@@ -335,8 +322,24 @@ export default function ProfileScreen() {
           </View>
 
           {households.length === 0 ? (
-            <View style={styles.householdInfo}>
-              <Text style={styles.householdName}>Inget hushåll hittades</Text>
+            <View style={[
+              styles.householdInfo,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              },
+            ]}>
+              <Text style={[styles.householdName, { color: colors.text }]}>Inget hushåll hittades</Text>
+            </View>
+          ) : !activeHousehold ? (
+            <View style={[
+              styles.householdInfo,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              },
+            ]}>
+              <Text style={[styles.householdName, { color: colors.text }]}>Inget aktivt hushåll</Text>
             </View>
           ) : (
             <>
@@ -351,7 +354,7 @@ export default function ProfileScreen() {
               >
                 <View style={styles.householdHeader}>
                   <Text style={[styles.householdName, { color: colors.text }]}>
-                    {activeHousehold?.name || "Välj hushåll"}
+                    {activeHousehold.name}
                   </Text>
                   <View style={styles.householdStatus}>
                     <Text
@@ -394,19 +397,21 @@ export default function ProfileScreen() {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[
-              styles.actionButton,
-              { backgroundColor: colors.surface },
-              leaveHouseholdMutation.isPending && styles.actionButtonDisabled,
-            ]}
-            onPress={handleLeaveHousehold}
-            disabled={leaveHouseholdMutation.isPending}
-          >
-            <Text style={[styles.actionButtonText, styles.leaveButtonText]}>
-              {leaveHouseholdMutation.isPending ? "Lämnar..." : "Lämna hushåll"}
-            </Text>
-          </TouchableOpacity>
+          {activeHousehold && (
+            <TouchableOpacity
+              style={[
+                styles.actionButton,
+                { backgroundColor: colors.surface },
+                leaveHouseholdMutation.isPending && styles.actionButtonDisabled,
+              ]}
+              onPress={handleLeaveHousehold}
+              disabled={leaveHouseholdMutation.isPending}
+            >
+              <Text style={[styles.actionButtonText, styles.leaveButtonText]}>
+                {leaveHouseholdMutation.isPending ? "Lämnar..." : "Lämna hushåll"}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={styles.section}>

@@ -10,7 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { getAuth } from 'firebase/auth';
 import { useAtom } from 'jotai';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { HouseholdList, HouseholdSummary } from '../../../components/HouseholdList';
 
@@ -36,14 +36,6 @@ export default function HouseholdScreen() {
     queryFn: () => getUserHouseholds(userId!),
     refetchOnWindowFocus: true,
   });
-
-  // Set first household as active by default
-  useEffect(() => {
-    const householdList = household as UserHousehold[];
-    if (householdList.length > 0 && !activeHouseholdId) {
-      setCurrentHousehold(householdList[0]);
-    }
-  }, [household, activeHouseholdId, setCurrentHousehold]);
 
   // Refresh data when screen comes into focus
   useFocusEffect(
