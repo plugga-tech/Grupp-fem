@@ -35,6 +35,11 @@ const queryClient = new QueryClient({
           queryKey: ["stats", householdId],
           exact: false,
         });
+        queryClient.refetchQueries({
+          queryKey: ["stats", householdId],
+          exact: false,
+          type: "all",
+        });
       }
     },
   }),

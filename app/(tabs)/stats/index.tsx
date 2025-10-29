@@ -50,7 +50,6 @@ export default function StatScreen() {
     gcTime: 1000 * 60 * 5,
   });
 
-  // gap ≈ 3% av innehållsbredd (dp)
   const { width } = useWindowDimensions();
   const H_PADDING = 16;
   const innerWidth = width - H_PADDING * 2;
@@ -85,12 +84,11 @@ export default function StatScreen() {
 
         <Card style={[styles.totalCard, { backgroundColor: colors.card }]}>
           <Card.Content style={styles.center}>
-            {/* Stor “pie” utan donut, emojis inne i sina slices */}
+            {/* Stor “pie” */}
             <Pie data={totalSlices} showSliceIcons iconSize={20} />
             <Text style={[styles.totalTitle, { color: colors.text }]}>
               Totalt
             </Text>
-            {/* Ingen summering under (enligt Figma) */}
           </Card.Content>
         </Card>
 
