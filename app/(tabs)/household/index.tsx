@@ -37,7 +37,6 @@ export default function HouseholdScreen() {
     refetchOnWindowFocus: true,
   });
 
-  // Refresh data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       refetch();
@@ -54,9 +53,7 @@ export default function HouseholdScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
-      <AppHeader
-        title="Dina hushåll"
-      />
+      <AppHeader title="Dina hushåll" />
 
       <HouseholdList
         households={household as any}

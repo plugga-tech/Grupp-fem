@@ -1,3 +1,4 @@
+import { useTheme } from '@/state/ThemeContext';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -27,6 +28,7 @@ export default function CreateHouseholdModal({
   result,
 }: Props) {
   const [name, setName] = useState('');
+  const { colors } = useTheme();
   useEffect(() => {
     if (visible && !result) {
       setName('');
@@ -50,7 +52,11 @@ export default function CreateHouseholdModal({
               />
               {error ? <Text style={styles.error}>{error}</Text> : null}
               <Pressable
-                style={[styles.modalBtn, (!name.trim() || pending) && { opacity: 0.5 }]}
+                style={[
+                  styles.modalBtn,
+                  { backgroundColor: colors.buttonPrimary },
+                  (!name.trim() || pending) && { opacity: 0.5 },
+                ]}
                 onPress={() => onSubmit(name.trim())}
                 disabled={!name.trim() || pending}
               >
@@ -74,7 +80,10 @@ export default function CreateHouseholdModal({
                   {result.code}
                 </Text>
               )}
-              <Pressable style={styles.modalBtn} onPress={onClose}>
+              <Pressable
+                style={[styles.modalBtn, { backgroundColor: colors.buttonPrimary }]}
+                onPress={onClose}
+              >
                 <Text style={styles.modalBtnText}>OK</Text>
               </Pressable>
             </>

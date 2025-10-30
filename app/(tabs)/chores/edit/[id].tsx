@@ -1,3 +1,5 @@
+import ActionButton from '@/components/ActionButton';
+import AppHeader from '@/components/AppHeader';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
@@ -15,8 +17,6 @@ import {
 } from 'react-native';
 import { deleteChore, getChoresWithStatus, updateChore } from '../../../../api/chores';
 import { currentHouseholdAtom } from '../../../../atoms';
-import AppHeader from '@/components/AppHeader';
-import ActionButton from '@/components/ActionButton';
 import { useTheme } from '../../../../state/ThemeContext';
 
 export default function EditChoreScreen() {
@@ -127,7 +127,10 @@ export default function EditChoreScreen() {
 
       <ScrollView style={styles.form}>
         <TextInput
-          style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
+          style={[
+            styles.input,
+            { backgroundColor: colors.card, borderColor: colors.border, color: colors.text },
+          ]}
           placeholder="Titel"
           value={name}
           onChangeText={setName}
@@ -135,7 +138,11 @@ export default function EditChoreScreen() {
         />
 
         <TextInput
-          style={[styles.input, styles.textArea, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
+          style={[
+            styles.input,
+            styles.textArea,
+            { backgroundColor: colors.card, borderColor: colors.border, color: colors.text },
+          ]}
           placeholder="Beskrivning"
           value={description}
           onChangeText={setDescription}
@@ -144,7 +151,10 @@ export default function EditChoreScreen() {
           placeholderTextColor={colors.textSecondary}
         />
 
-        <TouchableOpacity style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => setShowFrequencyPicker(true)}>
+        <TouchableOpacity
+          style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+          onPress={() => setShowFrequencyPicker(true)}
+        >
           <Text style={[styles.cardLabel, { color: colors.text }]}>Återkommer:</Text>
           <View style={styles.frequencyContainer}>
             <Text style={[styles.varText, { color: colors.text }]}>var</Text>
@@ -155,10 +165,15 @@ export default function EditChoreScreen() {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => setShowWeightPicker(true)}>
+        <TouchableOpacity
+          style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+          onPress={() => setShowWeightPicker(true)}
+        >
           <View>
             <Text style={[styles.cardLabel, { color: colors.text }]}>Värde:</Text>
-            <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>Hur energikrävande är sysslan?</Text>
+            <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
+              Hur energikrävande är sysslan?
+            </Text>
           </View>
           <View style={styles.numberBadgeGray}>
             <Text style={styles.numberBadgeText}>{weight}</Text>
@@ -191,9 +206,21 @@ export default function EditChoreScreen() {
                     setFrequency(num);
                     setShowFrequencyPicker(false);
                   }}
-                  style={[styles.pickerItem, frequency === num && styles.pickerItemActive, { backgroundColor: frequency === num ? '#6AC08B' : (isDark ? '#333' : '#E0E0E0') }]}
+                  style={[
+                    styles.pickerItem,
+                    frequency === num && styles.pickerItemActive,
+                    {
+                      backgroundColor: frequency === num ? '#6AC08B' : isDark ? '#333' : '#E0E0E0',
+                    },
+                  ]}
                 >
-                  <Text style={[styles.pickerText, frequency === num && styles.pickerTextActive, { color: frequency === num ? '#FFFFFF' : colors.textSecondary }]}>
+                  <Text
+                    style={[
+                      styles.pickerText,
+                      frequency === num && styles.pickerTextActive,
+                      { color: frequency === num ? '#FFFFFF' : colors.textSecondary },
+                    ]}
+                  >
                     {num}
                   </Text>
                 </TouchableOpacity>
@@ -224,9 +251,19 @@ export default function EditChoreScreen() {
                     setWeight(num);
                     setShowWeightPicker(false);
                   }}
-                  style={[styles.weightPickerItem, weight === num && styles.weightPickerItemActive, { backgroundColor: weight === num ? '#9E9E9E' : (isDark ? '#333' : '#E0E0E0') }]}
+                  style={[
+                    styles.weightPickerItem,
+                    weight === num && styles.weightPickerItemActive,
+                    { backgroundColor: weight === num ? '#9E9E9E' : isDark ? '#333' : '#E0E0E0' },
+                  ]}
                 >
-                  <Text style={[styles.pickerText, weight === num && styles.pickerTextActive, { color: weight === num ? '#FFFFFF' : colors.textSecondary }]}>
+                  <Text
+                    style={[
+                      styles.pickerText,
+                      weight === num && styles.pickerTextActive,
+                      { color: weight === num ? '#FFFFFF' : colors.textSecondary },
+                    ]}
+                  >
                     {num}
                   </Text>
                 </TouchableOpacity>
@@ -347,7 +384,6 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
   },
   closeButton: {
     flex: 1,
@@ -355,7 +391,6 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
   },
   modalOverlay: {
     flex: 1,

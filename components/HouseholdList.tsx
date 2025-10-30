@@ -63,6 +63,9 @@ export function HouseholdList({
                 ],
               ]}
               mode="elevated"
+              onPress={
+                isActive && onSetActiveHousehold ? () => onSetActiveHousehold(item) : undefined
+              }
             >
               <View style={styles.cardContent}>
                 <IconButton
@@ -121,9 +124,20 @@ export function HouseholdList({
           );
         }}
         ListEmptyComponent={
-          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-            Inga hushåll ännu.
-          </Text>
+          <View style={styles.emptyContainer}>
+            <View
+              style={[
+                styles.iconPlaceholder,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
+            >
+              <Text style={styles.iconText}>🏠</Text>
+            </View>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>Inga hushåll ännu</Text>
+            <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+              Skapa ett nytt hushåll eller gå med i ett befintligt för att komma igång.
+            </Text>
+          </View>
         }
       />
 
@@ -132,18 +146,19 @@ export function HouseholdList({
           label="Skapa"
           icon="plus-circle-outline"
           onPress={onCreatePress}
-          backgroundColor="#111827"
+          backgroundColor={colors.buttonPrimary}
           textColor="#fff"
-          style={styles.barBtn}
+          style={styles.bottomBarButton}
         />
 
         <ActionButton
           label="Gå med"
           icon="account-plus-outline"
           onPress={onJoinPress}
-          backgroundColor="#111827"
-          textColor="#fff"
-          style={styles.barBtn}
+          backgroundColor={colors.card}
+          textColor={colors.text}
+          iconColor={colors.text}
+          style={styles.bottomBarButton}
         />
       </View>
     </>
@@ -250,21 +265,50 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyText: {
-    padding: 16,
+  emptyContainer: {
+    paddingVertical: 32,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+  iconPlaceholder: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+  },
+  iconText: {
+    fontSize: 48,
+  },
+  emptyTitle: {
+    fontSize: 22,
+    fontWeight: '600',
+    marginBottom: 8,
     textAlign: 'center',
-    fontSize: 16,
-    color: '#666666',
-    fontStyle: 'italic',
+  },
+  emptySubtitle: {
+    fontSize: 15,
+    textAlign: 'center',
+    lineHeight: 22,
   },
   bottomBar: {
     flexDirection: 'row',
     gap: 12,
     paddingHorizontal: 16,
     paddingVertical: 8,
+    alignItems: 'stretch',
+    justifyContent: 'space-between',
   },
-  barBtn: {
+  bottomBarButton: {
     flex: 1,
-    borderRadius: 20,
+    flexBasis: 0,
+    minWidth: 0,
+    flexDirection: 'row',
+    paddingVertical: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
