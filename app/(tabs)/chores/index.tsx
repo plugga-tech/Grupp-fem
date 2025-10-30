@@ -5,7 +5,14 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { getAuth } from 'firebase/auth';
 import { useAtom } from 'jotai';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { Badge, Card, IconButton } from 'react-native-paper';
 import { choreKeys, getChoresWithStatus } from '../../../api/chores';
 import { currentHouseholdAtom } from '../../../atoms';
@@ -16,19 +23,19 @@ export default function ChoreScreen() {
   const [currentHousehold] = useAtom(currentHouseholdAtom);
   const activeHouseholdId = currentHousehold?.id ?? null;
   const { colors, isDark } = useTheme();
-   // Hämta current user från Firebase Auth
+  // Hämta current user från Firebase Auth
   const auth = getAuth();
   const userId = auth.currentUser?.uid;
- // Hämta household members för att få deras avatarer OCH kolla admin
+  // Hämta household members för att få deras avatarer OCH kolla admin
   const { data: members = [] } = useQuery({
     queryKey: householdKeys.members(activeHouseholdId || ''),
     queryFn: () => getHouseholdMembers(activeHouseholdId || ''),
     enabled: !!activeHouseholdId,
   });
-// Kolla om current user är admin
-  const currentMember = members.find(m => m.userId === userId);
+  // Kolla om current user är admin
+  const currentMember = members.find((m) => m.userId === userId);
   const canAddChore = currentMember?.isAdmin ?? false;
- 
+
   const {
     data: chores,
     isLoading,
@@ -41,7 +48,7 @@ export default function ChoreScreen() {
   });
 
   const getUserAvatar = (userId: string) => {
-    const member = members.find(m => m.userId === userId);
+    const member = members.find((m) => m.userId === userId);
     if (member?.avatar) {
       return {
         emoji: AVATAR_EMOJI[member.avatar as AvatarKey],
@@ -73,24 +80,6 @@ export default function ChoreScreen() {
     );
   }
 
-  if (!activeHouseholdId) {
-    return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <AppHeader
-          title="Hemma"
-          leftAction={{ icon: 'home-group', onPress: () => router.push('/(tabs)/household') }}
-        />
-        <View style={styles.emptyContainer}>
-          <View style={[styles.iconPlaceholder, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Text style={styles.iconText}>🏠</Text>
-          </View>
-          <Text style={[styles.emptyTitle, { color: colors.text }]}>Inget aktivt hushåll</Text>
-          <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>Gå till Hushåll och välj ett aktivt hushåll</Text>
-        </View>
-      </View>
-    );
-  }
-
   const householdName = currentHousehold?.name ?? 'Mitt Hushåll';
 
   return (
@@ -107,17 +96,24 @@ export default function ChoreScreen() {
 
       {!chores || chores.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <View style={[styles.iconPlaceholder, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View
+            style={[
+              styles.iconPlaceholder,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+            ]}
+          >
             <Text style={styles.iconText}>📋</Text>
           </View>
           <Text style={[styles.emptyTitle, { color: colors.text }]}>Inga sysslor än</Text>
-          <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>Tryck på + för att lägga till din första syssla</Text>
+          <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+            Tryck på + för att lägga till din första syssla
+          </Text>
         </View>
       ) : (
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
           {chores.map((chore) => {
             const hasAvatars = chore.completed_by_avatars && chore.completed_by_avatars.length > 0;
-            
+
             return (
               <TouchableOpacity
                 key={chore.id}
@@ -131,7 +127,7 @@ export default function ChoreScreen() {
                     <Text style={[styles.choreName, { color: colors.text }]}>{chore.name}</Text>
 
                     {hasAvatars ? (
-                        // Visa avatarer om någon gjort sysslan idag
+                      // Visa avatarer om någon gjort sysslan idag
                       <View style={styles.avatarContainer}>
                         {chore.completed_by_avatars!.slice(0, 3).map((userId, index) => {
                           const { emoji, color } = getUserAvatar(userId);
@@ -146,25 +142,28 @@ export default function ChoreScreen() {
                           );
                         })}
                         {chore.completed_by_avatars!.length > 3 && (
-                          <View style={[styles.avatarMore, { backgroundColor: isDark ? '#333' : '#E0E0E0' }]}>
+                          <View
+                            style={[
+                              styles.avatarMore,
+                              { backgroundColor: isDark ? '#333' : '#E0E0E0' },
+                            ]}
+                          >
                             <Text style={[styles.avatarMoreText, { color: colors.textSecondary }]}>
                               +{chore.completed_by_avatars!.length - 3}
                             </Text>
                           </View>
                         )}
                       </View>
-                    ) : (
-                      chore.days_since_last > 0 ? (
-                        <View
-                          style={[
-                            styles.dayBadge,
-                            chore.is_overdue ? styles.dayBadgeOverdue : styles.dayBadgeNormal,
-                          ]}
-                        >
-                          <Text style={styles.dayNumber}>{chore.days_since_last}</Text>
-                        </View>
-                      ) : null
-                    )}
+                    ) : chore.days_since_last > 0 ? (
+                      <View
+                        style={[
+                          styles.dayBadge,
+                          chore.is_overdue ? styles.dayBadgeOverdue : styles.dayBadgeNormal,
+                        ]}
+                      >
+                        <Text style={styles.dayNumber}>{chore.days_since_last}</Text>
+                      </View>
+                    ) : null}
                   </Card.Content>
                 </Card>
               </TouchableOpacity>

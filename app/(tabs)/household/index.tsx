@@ -54,9 +54,7 @@ export default function HouseholdScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
-      <AppHeader
-        title="Dina hushåll"
-      />
+      <AppHeader title="Dina hushåll" />
 
       <HouseholdList
         households={household as any}
