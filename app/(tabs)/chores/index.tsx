@@ -9,15 +9,17 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View
 import { Badge, Card, IconButton } from 'react-native-paper';
 import { choreKeys, getChoresWithStatus } from '../../../api/chores';
 import { currentHouseholdAtom } from '../../../atoms';
+import { useTheme } from '../../../state/ThemeContext';
 
 export default function ChoreScreen() {
   const router = useRouter();
   const [currentHousehold] = useAtom(currentHouseholdAtom);
   const activeHouseholdId = currentHousehold?.id ?? null;
-  // Hämta current user från Firebase Auth
+  const { colors, isDark } = useTheme();
+   // Hämta current user från Firebase Auth
   const auth = getAuth();
   const userId = auth.currentUser?.uid;
-  // Hämta household members för att få deras avatarer OCH kolla admin
+ // Hämta household members för att få deras avatarer OCH kolla admin
   const { data: members = [] } = useQuery({
     queryKey: householdKeys.members(activeHouseholdId || ''),
     queryFn: () => getHouseholdMembers(activeHouseholdId || ''),
@@ -51,10 +53,10 @@ export default function ChoreScreen() {
 
   if (isLoading) {
     return (
-      <View style={[styles.container, styles.center]}>
+      <View style={[styles.container, styles.center, { backgroundColor: colors.background }]}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4A90E2" />
-          <Text style={styles.loadingText}>Laddar sysslor...</Text>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.text }]}>Laddar sysslor...</Text>
         </View>
       </View>
     );
@@ -62,10 +64,10 @@ export default function ChoreScreen() {
 
   if (isError) {
     return (
-      <View style={[styles.container, styles.center]}>
+      <View style={[styles.container, styles.center, { backgroundColor: colors.background }]}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Kunde inte ladda sysslor</Text>
-          <IconButton icon="refresh" onPress={() => refetch()} />
+          <Text style={[styles.errorText, { color: colors.text }]}>Kunde inte ladda sysslor</Text>
+          <IconButton icon="refresh" onPress={() => refetch()} iconColor={colors.primary} />
         </View>
       </View>
     );
@@ -73,17 +75,17 @@ export default function ChoreScreen() {
 
   if (!activeHouseholdId) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <AppHeader
           title="Hemma"
           leftAction={{ icon: 'home-group', onPress: () => router.push('/(tabs)/household') }}
         />
         <View style={styles.emptyContainer}>
-          <View style={styles.iconPlaceholder}>
+          <View style={[styles.iconPlaceholder, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Text style={styles.iconText}>🏠</Text>
           </View>
-          <Text style={styles.emptyTitle}>Inget aktivt hushåll</Text>
-          <Text style={styles.emptySubtitle}>Gå till Hushåll och välj ett aktivt hushåll</Text>
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>Inget aktivt hushåll</Text>
+          <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>Gå till Hushåll och välj ett aktivt hushåll</Text>
         </View>
       </View>
     );
@@ -92,7 +94,7 @@ export default function ChoreScreen() {
   const householdName = currentHousehold?.name ?? 'Mitt Hushåll';
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <AppHeader
         title={householdName}
         leftAction={{ icon: 'home-group', onPress: () => router.push('/(tabs)/household') }}
@@ -105,11 +107,11 @@ export default function ChoreScreen() {
 
       {!chores || chores.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <View style={styles.iconPlaceholder}>
+          <View style={[styles.iconPlaceholder, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Text style={styles.iconText}>📋</Text>
           </View>
-          <Text style={styles.emptyTitle}>Inga sysslor än</Text>
-          <Text style={styles.emptySubtitle}>Tryck på + för att lägga till din första syssla</Text>
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>Inga sysslor än</Text>
+          <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>Tryck på + för att lägga till din första syssla</Text>
         </View>
       ) : (
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
@@ -124,12 +126,12 @@ export default function ChoreScreen() {
                 }}
                 activeOpacity={0.7}
               >
-                <Card style={styles.card}>
+                <Card style={[styles.card, { backgroundColor: colors.card }]}>
                   <Card.Content style={styles.cardContent}>
-                    <Text style={styles.choreName}>{chore.name}</Text>
+                    <Text style={[styles.choreName, { color: colors.text }]}>{chore.name}</Text>
 
                     {hasAvatars ? (
-                      // Visa avatarer om någon gjort sysslan idag
+                        // Visa avatarer om någon gjort sysslan idag
                       <View style={styles.avatarContainer}>
                         {chore.completed_by_avatars!.slice(0, 3).map((userId, index) => {
                           const { emoji, color } = getUserAvatar(userId);
@@ -144,8 +146,8 @@ export default function ChoreScreen() {
                           );
                         })}
                         {chore.completed_by_avatars!.length > 3 && (
-                          <View style={styles.avatarMore}>
-                            <Text style={styles.avatarMoreText}>
+                          <View style={[styles.avatarMore, { backgroundColor: isDark ? '#333' : '#E0E0E0' }]}>
+                            <Text style={[styles.avatarMoreText, { color: colors.textSecondary }]}>
                               +{chore.completed_by_avatars!.length - 3}
                             </Text>
                           </View>
@@ -177,7 +179,6 @@ export default function ChoreScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E8E8E8',
   },
   center: {
     justifyContent: 'center',
@@ -193,7 +194,6 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: 12,
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     elevation: 2,
     minHeight: 60,
@@ -208,7 +208,6 @@ const styles = StyleSheet.create({
   choreName: {
     fontSize: 18,
     fontWeight: '500',
-    color: '#000',
     flex: 1,
   },
   avatarContainer: {
@@ -223,14 +222,12 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#E0E0E0',
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarMoreText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#666',
   },
   dayBadge: {
     minWidth: 36,
@@ -262,12 +259,10 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
     borderWidth: 2,
-    borderColor: '#D0D0D0',
     borderStyle: 'dashed',
   },
   iconText: {
@@ -276,13 +271,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#404040',
     marginBottom: 8,
     textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: 16,
-    color: '#808080',
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -294,7 +287,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
   },
   errorContainer: {
     flex: 1,
@@ -303,7 +295,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 18,
-    color: 'red',
     marginBottom: 16,
   },
 });

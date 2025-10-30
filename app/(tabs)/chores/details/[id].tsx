@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { completeChore, getChoresWithStatus } from "../../../../api/chores";
 import { currentHouseholdAtom } from "../../../../atoms";
+import { useTheme } from "../../../../state/ThemeContext";
 
 export default function ChoreDetailsScreen() {
   const router = useRouter();
@@ -21,16 +22,17 @@ export default function ChoreDetailsScreen() {
   const queryClient = useQueryClient();
   const [currentHousehold] = useAtom(currentHouseholdAtom);
   const activeHouseholdId = currentHousehold?.id ?? null;
-  // Hämta current user från Firebase Auth
-  const auth = getAuth();
+  const { colors } = useTheme();
+    
+  const auth = getAuth();  // Hämta current user från Firebase Auth
   const userId = auth.currentUser?.uid;
-  // Hämta household members för att kolla om användaren är admin
+   // Hämta household members för att kolla om användaren är admin
   const { data: members = [] } = useQuery({
     queryKey: householdKeys.members(activeHouseholdId || ""),
     queryFn: () => getHouseholdMembers(activeHouseholdId || ""),
     enabled: !!activeHouseholdId,
   });
-   // Kolla om current user är admin
+     // Kolla om current user är admin
   const currentMember = members.find((m) => m.userId === userId);
   const isAdmin = currentMember?.isAdmin ?? false;
 
@@ -57,22 +59,22 @@ export default function ChoreDetailsScreen() {
 
   if (isLoading) {
     return (
-      <View style={[styles.container, styles.center]}>
-        <ActivityIndicator size="large" color="#4A90E2" />
+      <View style={[styles.container, styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   if (!chore) {
     return (
-      <View style={[styles.container, styles.center]}>
-        <ActivityIndicator size="large" color="#4A90E2" />
+      <View style={[styles.container, styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <AppHeader
         title="Sysslans information"
         leftAction={{ 
@@ -92,18 +94,18 @@ export default function ChoreDetailsScreen() {
       />
 
       <ScrollView style={styles.content}>
-        <View style={styles.card}>
-          <Text style={styles.choreName}>{chore.name}</Text>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.choreName, { color: colors.text }]}>{chore.name}</Text>
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.description}>{chore.description}</Text>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.description, { color: colors.text }]}>{chore.description}</Text>
         </View>
 
-        <View style={styles.infoCard}>
-          <Text style={styles.infoLabel}>Återkommer:</Text>
+        <View style={[styles.infoCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.infoLabel, { color: colors.text }]}>Återkommer:</Text>
           <View style={styles.frequencyContainer}>
-            <Text style={styles.varText}>var</Text>
+            <Text style={[styles.varText, { color: colors.text }]}>var</Text>
             <View
               style={[
                 styles.numberBadge,
@@ -114,14 +116,14 @@ export default function ChoreDetailsScreen() {
             >
               <Text style={styles.numberBadgeText}>{chore.frequency}</Text>
             </View>
-            <Text style={styles.varText}>dag</Text>
+            <Text style={[styles.varText, { color: colors.text }]}>dag</Text>
           </View>
         </View>
 
-        <View style={styles.infoCard}>
+        <View style={[styles.infoCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View>
-            <Text style={styles.infoLabel}>Värde:</Text>
-            <Text style={styles.infoSubtitle}>
+            <Text style={[styles.infoLabel, { color: colors.text }]}>Värde:</Text>
+            <Text style={[styles.infoSubtitle, { color: colors.textSecondary }]}>
               Hur energikrävande är sysslan?
             </Text>
           </View>
@@ -131,9 +133,9 @@ export default function ChoreDetailsScreen() {
         </View>
       </ScrollView>
 
-      <View style={styles.buttonContainer}>
+      <View style={[styles.buttonContainer, { backgroundColor: colors.background }]}>
         <TouchableOpacity
-          style={styles.completeButton}
+          style={[styles.completeButton, { backgroundColor: colors.buttonPrimary }]}
           onPress={() => completeMutation.mutate()}
           disabled={completeMutation.isPending}
         >
@@ -149,7 +151,6 @@ export default function ChoreDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
   },
   center: {
     justifyContent: "center",
@@ -160,42 +161,34 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   card: {
-    backgroundColor: "#FFFFFF",
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#E0E0E0",
   },
   choreName: {
     fontSize: 18,
     fontWeight: "500",
-    color: "#000",
   },
   description: {
     fontSize: 15,
-    color: "#333",
     lineHeight: 22,
   },
   infoCard: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#E0E0E0",
   },
   infoLabel: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#000",
   },
   infoSubtitle: {
     fontSize: 12,
-    color: "#999",
     marginTop: 4,
   },
   frequencyContainer: {
@@ -205,7 +198,6 @@ const styles = StyleSheet.create({
   },
   varText: {
     fontSize: 16,
-    color: "#000",
   },
   numberBadge: {
     width: 36,
@@ -235,10 +227,8 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     padding: 16,
-    backgroundColor: "#F5F5F5",
   },
   completeButton: {
-    backgroundColor: "#4A90E2",
     paddingVertical: 18,
     borderRadius: 12,
     alignItems: "center",
