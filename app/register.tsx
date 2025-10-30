@@ -1,7 +1,7 @@
 import { useAuth } from '@/state/AuthContext';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Image, StyleSheet, View } from 'react-native';
+import { Alert, Image, StyleSheet, View, KeyboardAvoidingView, Platform, ScrollView} from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
 
 export default function RegisterScreen() {
@@ -44,6 +44,15 @@ export default function RegisterScreen() {
   };
 
   return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.select({ ios: 'padding', android: 'height' })}
+    >
+        <ScrollView
+          contentContainerStyle={styles.container}
+          keyboardShouldPersistTaps="handled"
+        >
+
     <View style={styles.container}>
       {/* Logo Section */}
       <View style={styles.logoContainer}>
@@ -132,15 +141,18 @@ export default function RegisterScreen() {
         </Text>
       </View>
     </View>
+    </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 32,
-    paddingTop: 80,
+    paddingTop: 40,
+    paddingBottom: 40,
   },
   logoContainer: {
     alignItems: 'center',
@@ -150,6 +162,7 @@ const styles = StyleSheet.create({
   logo: {
     width: 180,
     height: 180,
+    borderRadius: 20,
   },
   title: {
     fontSize: 32,
