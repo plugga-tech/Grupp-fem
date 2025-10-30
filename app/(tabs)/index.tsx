@@ -1,1 +1,1 @@
-export { default } from './household';
+export { default } from './chores';
