@@ -1,3 +1,4 @@
+import { useTheme } from '@/state/ThemeContext';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -27,6 +28,7 @@ export default function JoinHouseholdModal({
   result,
 }: Props) {
   const [code, setCode] = useState('');
+  const { colors } = useTheme();
   useEffect(() => {
     if (visible && !result) setCode('');
   }, [visible, result]);
@@ -49,7 +51,11 @@ export default function JoinHouseholdModal({
               />
               {error ? <Text style={styles.error}>{error}</Text> : null}
               <Pressable
-                style={[styles.modalBtn, (!code.trim() || pending) && { opacity: 0.5 }]}
+                style={[
+                  styles.modalBtn,
+                  { backgroundColor: colors.buttonPrimary },
+                  (!code.trim() || pending) && { opacity: 0.5 },
+                ]}
                 onPress={() => onSubmit(code.trim())}
                 disabled={!code.trim() || pending}
               >
@@ -64,7 +70,10 @@ export default function JoinHouseholdModal({
             <>
               <Text style={styles.modalTitle}>Klart!</Text>
               <Text style={styles.modalBody}>Du är nu med i {result.name ?? 'hushållet'}.</Text>
-              <Pressable style={styles.modalBtn} onPress={onClose}>
+              <Pressable
+                style={[styles.modalBtn, { backgroundColor: colors.buttonPrimary }]}
+                onPress={onClose}
+              >
                 <Text style={styles.modalBtnText}>OK</Text>
               </Pressable>
             </>
