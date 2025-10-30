@@ -1,8 +1,9 @@
+import { useTheme } from "@/state/ThemeContext";
 import { addMonths, addWeeks, addYears, format } from "date-fns";
 import sv from "date-fns/locale/sv";
 import React from "react";
-import { StyleSheet, View } from "react-native";
-import { IconButton, SegmentedButtons, Text } from "react-native-paper";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { IconButton, Text } from "react-native-paper";
 
 export type PeriodMode = "week" | "month" | "year";
 
@@ -33,6 +34,7 @@ export default function PeriodPicker({
   onChange,
   disableNextWhenCurrent = true,
 }: Props) {
+  const { colors } = useTheme();
   const { mode, anchor } = value;
 
   const goPrev = () => {
@@ -59,28 +61,58 @@ export default function PeriodPicker({
       format(anchor, "yyyy", { locale: sv }) ===
         format(new Date(), "yyyy", { locale: sv }));
 
+  const buttons: { value: PeriodMode; label: string }[] = [
+    { value: "week", label: "Vecka" },
+    { value: "month", label: "Månad" },
+    { value: "year", label: "År" },
+  ];
+
   return (
     <View style={styles.wrapper}>
-      <SegmentedButtons
-        value={mode}
-        onValueChange={(v) =>
-          onChange({ mode: v as PeriodMode, anchor: new Date() })
-        }
-        buttons={[
-          { value: "week", label: "Vecka" },
-          { value: "month", label: "Månad" },
-          { value: "year", label: "År" },
-        ]}
-        density="small"
-        style={styles.segmented}
-      />
+      <View style={styles.segmentRow}>
+        {buttons.map((b) => {
+          const selected = mode === b.value;
+          return (
+            <TouchableOpacity
+              key={b.value}
+              activeOpacity={0.8}
+              onPress={() => onChange({ mode: b.value, anchor: new Date() })}
+              style={[
+                styles.segmentBtn,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                },
+                selected && [
+                  styles.segmentBtnSelected,
+                  { borderColor: colors.primary },
+                ],
+              ]}
+            >
+              <Text
+                style={[
+                  styles.segmentText,
+                  { color: colors.text },
+                  selected && [{ color: colors.primary, fontWeight: "600" }],
+                ]}
+              >
+                {b.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
 
       <View style={styles.navRow}>
         <View style={styles.side}>
           <IconButton icon="chevron-left" onPress={goPrev} size={22} />
         </View>
 
-        <Text variant="titleMedium" style={styles.title} numberOfLines={1}>
+        <Text
+          variant="titleMedium"
+          style={[styles.title, { color: colors.text }]}
+          numberOfLines={1}
+        >
           {getLabel(mode, anchor)}
         </Text>
 
@@ -100,8 +132,26 @@ export default function PeriodPicker({
 const SIDE_WIDTH = 44;
 
 const styles = StyleSheet.create({
-  wrapper: { gap: 6, marginBottom: 6 },
-  segmented: { alignSelf: "center" },
+  wrapper: { gap: 8, marginBottom: 6 },
+  segmentRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  segmentBtn: {
+    flex: 1,
+    borderRadius: 12,
+    borderWidth: 2,
+    paddingVertical: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  segmentBtnSelected: {},
+  segmentText: {
+    fontSize: 14,
+  },
+
   navRow: {
     flexDirection: "row",
     alignItems: "center",
