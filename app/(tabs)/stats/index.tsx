@@ -55,6 +55,9 @@ export default function StatScreen() {
   const innerWidth = width - H_PADDING * 2;
   const GAP = innerWidth * 0.03;
 
+  const LARGE_PIE_SIZE = 184;
+  const MINI_PIE_SIZE = 76;
+
   // Totalt: färger + emoji på varje slice
   const totalSlices = (stats?.total ?? []).map((s) => ({
     value: s.value,
@@ -83,9 +86,14 @@ export default function StatScreen() {
         </View>
 
         <Card style={[styles.totalCard, { backgroundColor: colors.card }]}>
-          <Card.Content style={styles.center}>
+          <Card.Content style={[styles.center, styles.totalContent]}>
             {/* Stor “pie” */}
-            <Pie data={totalSlices} showSliceIcons iconSize={20} />
+            <Pie
+              data={totalSlices}
+              showSliceIcons
+              iconSize={20}
+              size={LARGE_PIE_SIZE}
+            />
             <Text style={[styles.totalTitle, { color: colors.text }]}>
               Totalt
             </Text>
@@ -107,7 +115,7 @@ export default function StatScreen() {
                 style={[styles.smallCard, { backgroundColor: colors.card }]}
               >
                 <Card.Content style={styles.smallCardContent}>
-                  <MiniPie data={slices} />
+                  <MiniPie data={slices} size={MINI_PIE_SIZE} />
                   <Text
                     numberOfLines={2}
                     ellipsizeMode="tail"
@@ -130,19 +138,29 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 16 },
   periodWrapper: { marginBottom: 4 },
 
-  totalCard: { borderRadius: 16, paddingVertical: 12, marginBottom: 16 },
+  totalCard: { borderRadius: 16, marginBottom: 16 },
+  totalContent: { paddingHorizontal: 10, paddingVertical: 10 },
+
   center: { alignItems: "center", justifyContent: "center" },
-  totalTitle: { marginTop: 8, fontSize: 16, fontWeight: "600" },
+  totalTitle: { marginTop: 10, fontSize: 16, fontWeight: "600" },
 
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "flex-start",
   },
-  smallCard: { width: "31%", borderRadius: 16, paddingVertical: 10 },
-  smallCardContent: { alignItems: "center", justifyContent: "center" },
+
+  smallCard: { width: "31%", borderRadius: 16 },
+  smallCardContent: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 8,
+    paddingTop: 8,
+    paddingBottom: 12,
+  },
 
   choreName: {
+    marginTop: 8,
     fontSize: 13,
     fontWeight: "500",
     textAlign: "center",
