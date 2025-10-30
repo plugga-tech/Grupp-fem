@@ -37,7 +37,6 @@ export default function HouseholdScreen() {
     refetchOnWindowFocus: true,
   });
 
-  // Refresh data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       refetch();
